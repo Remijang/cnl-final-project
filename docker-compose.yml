@@ -20,6 +20,9 @@ services:
       DB_NAME: calendar_db
     depends_on:
       - db
+    links:
+      - db
+      - db:database
 
   db:
     image: postgres:15
