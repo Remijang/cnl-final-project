@@ -3,3 +3,4 @@ backend-node/package-lock.json
 frontend-react/node_modules
 frontend-react/package-lock.json
 package-lock.json
+sqls/*
