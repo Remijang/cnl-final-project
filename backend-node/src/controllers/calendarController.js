@@ -13,7 +13,7 @@ exports.createCalendar = async (req, res) => {
   }
 };
 
-exports.getUserCalendars = async (req, res) => {
+exports.getUserCalendar = async (req, res) => {
   const { userId } = req.params;
   try {
     const result = await pool.query(
