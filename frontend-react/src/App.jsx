@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import CalendarList from "./components/CalendarList";
 import LoginForm from "./components/LoginForm";
 import OAuthRedirect from "./components/OAuthRedirect";
+import EventManager from "./components/EventManager";
 
 const App = () => {
   const [calendars, setCalendars] = useState([]);
@@ -34,7 +35,10 @@ const App = () => {
               {!token ? (
                 <LoginForm setToken={setToken} />
               ) : (
-                <CalendarList calendars={calendars} />
+                <>
+                  <CalendarList calendars={calendars} />
+                  <EventManager token={token} />
+                </>
               )}
             </div>
           }
