@@ -25,3 +25,15 @@ exports.getUserCalendar = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.getAggregatedCalendar = async (req, res) => {
+  throw new Error("Unimplemented!");
+};
+
+exports.updateCalendar = async (req, res) => {
+  throw new Error("Unimplemented!");
+};
+
+exports.deleteCalendar = async (req, res) => {
+  throw new Error("Unimplemented!");
+};

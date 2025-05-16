@@ -26,6 +26,10 @@ exports.createEvent = async (req, res) => {
   }
 };
 
+exports.updateEvent = async (req, res) => {
+  throw new Error("Unimplemented!");
+};
+
 exports.deleteEvent = async (req, res) => {
   const { id } = req.params;
   try {

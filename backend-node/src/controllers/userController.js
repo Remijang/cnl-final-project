@@ -35,3 +35,15 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.logout = async (req, res) => {
+  throw new Error("Unimplemented!");
+};
+
+exports.getProfile = async (req, res) => {
+  throw new Error("Unimplemented!");
+};
+
+exports.updateProfile = async (req, res) => {
+  throw new Error("Unimplemented!");
+};
