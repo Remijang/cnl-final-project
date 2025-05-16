@@ -101,16 +101,9 @@ CREATE TABLE polls (
     description TEXT,
     owner_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     is_confirmed BOOLEAN DEFAULT FALSE,
-    confirmed_time_range_id INTEGER REFERENCES poll_time_ranges(id),
+    confirmed_time_range_id INTEGER,
     is_cancelled BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE poll_invited_users (
-    poll_id INTEGER REFERENCES polls(id) ON DELETE CASCADE,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    invited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (poll_id, user_id)
 );
 
 CREATE TABLE poll_time_ranges (
@@ -118,6 +111,16 @@ CREATE TABLE poll_time_ranges (
     poll_id INTEGER REFERENCES polls(id) ON DELETE CASCADE,
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL
+);
+
+ALTER TABLE polls
+  ADD CONSTRAINT fk_confirmed_time_range_id FOREIGN KEY (confirmed_time_range_id)  REFERENCES poll_time_ranges(id);
+
+CREATE TABLE poll_invited_users (
+    poll_id INTEGER REFERENCES polls(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    invited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (poll_id, user_id)
 );
 
 CREATE TABLE poll_votes (

@@ -2,40 +2,41 @@ version: "3.8"
 
 services:
   frontend:
-    build: ./frontend-react
+    build: frontend-react
     ports:
       - "80:80"
     depends_on:
       - backend
 
   backend:
-    build: ./backend-node
+    build: backend-node
     ports:
       - "3000:3000"
-    environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: calendar_db
     depends_on:
       - db
+      - test_db
     links:
       - db
       - db:database
+      - test_db
+      - test_db:test_db
 
   db:
-    image: postgres:15
+    build: database/db
     restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: calendar_db
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./sqls:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
 
+  test_db:
+    build: database/test_db
+    restart: always
+    volumes:
+      - pgdata_test:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
 volumes:
   pgdata:
+  pgdata_test:

@@ -3,4 +3,5 @@ backend-node/package-lock.json
 frontend-react/node_modules
 frontend-react/package-lock.json
 package-lock.json
-sqls/*
+database/db/schema.sql
+database/test_db/schema.sql
