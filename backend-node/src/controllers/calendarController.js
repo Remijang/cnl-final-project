@@ -108,7 +108,7 @@ exports.deleteCalendar = async (req, res) => {
     }
 
     // CASCADE automactically delete related calendar_shared_users record
-    await pool.query(
+    const result = await pool.query(
       "DELETE FROM calendars WHERE id = $1 RETURNING id, title",
       [calendarId]
     );
