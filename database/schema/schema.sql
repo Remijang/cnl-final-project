@@ -44,7 +44,7 @@ CREATE TABLE calendars (
 CREATE TABLE calendar_shared_users (
     calendar_id INTEGER REFERENCES calendars(id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    permission TEXT DEFAULT 'write', --'read', 'write', 'admin'
+    permission TEXT DEFAULT 'write', -- 'read', 'write', 'admin'
     PRIMARY KEY (calendar_id, user_id)
 );
 

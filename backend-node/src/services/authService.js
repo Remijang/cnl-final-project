@@ -6,10 +6,10 @@ exports.register = async (req, res) => {
   const { email, password } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query("INSERT INTO users (email, password) VALUES ($1, $2)", [
-      email,
-      hashedPassword,
-    ]);
+    await pool.query(
+      "INSERT INTO users (email, hashed_password) VALUES ($1, $2)",
+      [email, hashedPassword]
+    );
     res.status(201).json({ message: "User registered" });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -23,7 +23,7 @@ exports.login = async (req, res) => {
       email,
     ]);
     const user = result.rows[0];
-    if (user && (await bcrypt.compare(password, user.password))) {
+    if (user && (await bcrypt.compare(password, user.hashed_password))) {
       const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
         expiresIn: "1d",
       });
@@ -37,5 +37,5 @@ exports.login = async (req, res) => {
 };
 
 exports.logout = async (req, res) => {
-  throw new Error("Unimplemented!");
+  throw new Error("Unimplemented!"); // message: Logged out successfully
 };
