@@ -18,11 +18,11 @@ exports.createCalendar = async (req, res) => {
 };
 
 exports.getUserCalendar = async (req, res) => {
-  const { userId } = req.params;
+  const ownerId = req.user.id;
   try {
     const result = await pool.query(
       "SELECT * FROM calendars WHERE owner_id = $1",
-      [userId]
+      [ownerId]
     );
     res.json(result.rows);
   } catch (err) {
@@ -38,20 +38,14 @@ exports.getAggregatedCalendar = async (req, res) => {
       ORDER BY created_at DESC
     `);
 
-    res.json({
-      count: result.rowCount,
-      calendars: result.rows,
-    });
+    res.json(result.rows);
   } catch (err) {
-    res.status(500).json({
-      error: "取得日曆資料失敗",
-      details: process.env.NODE_ENV === "development" ? err.message : undefined,
-    });
+    res.status(500).json({ error: err.message });
   }
 };
 
 exports.updateCalendar = async (req, res) => {
-  const { id: calendarId } = req.params;
+  const { calendarId } = req.params;
   const { title } = req.body;
   const userId = req.user.id;
 
@@ -82,14 +76,14 @@ exports.updateCalendar = async (req, res) => {
       return res.status(404).json({ error: "Calendar not found" });
     }
 
-    res.status(201).json(result.rows[0]);
+    res.status(200).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
 exports.deleteCalendar = async (req, res) => {
-  const { id: calendarId } = req.params; // store in new variable calendarId
+  const { calendarId } = req.params; // store in new variable calendarId
   const userId = req.user.id;
 
   try {
@@ -113,7 +107,7 @@ exports.deleteCalendar = async (req, res) => {
       [calendarId]
     );
 
-    res.status(201).json(result.rows[0]);
+    res.status(200).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

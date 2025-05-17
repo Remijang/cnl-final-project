@@ -93,8 +93,9 @@ describe("Calendar API", () => {
   // it("GET /calendars/aggregated returns owned + shared calendars", async () => {});
 
   it("should update its calendar and only its", async () => {
+    console.log(`${calendaraId}`);
     res = await request(app)
-      .put(`/calendars/${calendaraId}`)
+      .put(`/api/calendars/${calendaraId}`)
       .set("Authorization", `Bearer ${tokena}`)
       .send({ title: "New Title A" })
       .expect(200);
@@ -105,7 +106,7 @@ describe("Calendar API", () => {
       .put(`/api/calendars/${calendarbId}`)
       .set("Authorization", `Bearer ${tokena}`)
       .send({ title: "New Title A" })
-      .expect(500);
+      .expect(403);
     res = await request(app)
       .put(`/api/calendars/${calendarbId}`)
       .send({ title: "New Title A" })
@@ -127,7 +128,10 @@ describe("Calendar API", () => {
 
     res = await request(app)
       .delete(`/api/calendars/${calendarbId}`)
+      .set("Authorization", `Bearer ${tokena}`)
+      .expect(403);
+    res = await request(app)
+      .delete(`/api/calendars/${calendarbId}`)
       .expect(401);
-    res = await request(app).delete(`/calendars/${calendarbId}`).expect(500);
   });
 });
