@@ -1,13 +1,17 @@
 const pool = require("../config/db");
 
 exports.createCalendar = async (req, res) => {
-  const { userId, title } = req.body;
+  const { title } = req.body;
+  const ownerId = req.user.id;
   try {
-    await pool.query(
-      "INSERT INTO calendars (owner_id, title) VALUES ($1, $2)",
-      [userId, title]
+    const result = await pool.query(
+      `INSERT INTO calendars (owner_id, title) 
+       VALUES ($1, $2) 
+       RETURNING id, title, created_at, updated_at`,
+      [ownerId, title]
     );
-    res.status(201).json({ message: "Calendar created" });
+
+    res.status(201).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
