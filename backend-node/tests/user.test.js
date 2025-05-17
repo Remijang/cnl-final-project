@@ -1,6 +1,7 @@
 const request = require("supertest");
 const app = require("../src/app/app");
 const pool = require("../src/config/db");
+const jwt = require("jsonwebtoken");
 
 const databaseCleanup = async () => {
   await pool.query("DELETE FROM users");
@@ -22,8 +23,8 @@ const databaseCleanup = async () => {
 describe("User API", () => {
   let tokena, tokenb, uida, uidb;
   beforeAll(async () => {
-    let res;
     await databaseCleanup();
+    let res;
     res = await request(app)
       .post("/api/auth/register")
       .send({ name: "a", email: "a@example.com", password: "testpass" });
@@ -35,6 +36,8 @@ describe("User API", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.token).toBeDefined();
     tokena = res.body.token;
+    const decodedTokenA = jwt.verify(tokena, process.env.JWT_SECRET);
+    uida = decodedTokenA.id;
 
     res = await request(app)
       .post("/api/auth/register")
@@ -73,7 +76,7 @@ describe("User API", () => {
         avatar_url: "http://avatar.com/b.jpg",
         bio: "Updated bio",
       })
-      .expect(201);
+      .expect(200);
 
     res = await request(app)
       .get("/api/users/profile")

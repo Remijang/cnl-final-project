@@ -1,7 +1,6 @@
 const pool = require("../config/db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const authenticate = require("../middleware/authMiddleware");
 const { v4: uuidv4 } = require("uuid");
 
 exports.register = async (req, res) => {
@@ -73,33 +72,30 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.logout = [
-  authenticate,
-  async (req, res) => {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
+exports.logout = async (req, res) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
 
-    if (!token) {
-      return res.sendStatus(204); // No content, as there's no token to invalidate
+  if (!token) {
+    return res.sendStatus(204); // No content, as there's no token to invalidate
+  }
+
+  try {
+    const result = await pool.query(
+      "UPDATE user_tokens SET is_revoked = TRUE WHERE token = $1",
+      [token]
+    );
+
+    if (result.rowCount > 0) {
+      res.status(200).json({ message: "Logged out successfully" });
+    } else {
+      // Token might not be found in our database, but client-side should still clear it
+      res.status(200).json({ message: "Logged out successfully" });
     }
-
-    try {
-      const result = await pool.query(
-        "UPDATE user_tokens SET is_revoked = TRUE WHERE token = $1",
-        [token]
-      );
-
-      if (result.rowCount > 0) {
-        res.status(200).json({ message: "Logged out successfully" });
-      } else {
-        // Token might not be found in our database, but client-side should still clear it
-        res.status(200).json({ message: "Logged out successfully" });
-      }
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  },
-];
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 exports.googleAuth = async (req, res) => {
   const { name, email, googleId, avatarUrl } = req.body;
