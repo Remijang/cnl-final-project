@@ -27,7 +27,23 @@ exports.getUserCalendar = async (req, res) => {
 };
 
 exports.getAggregatedCalendar = async (req, res) => {
-  throw new Error("Unimplemented!");
+  try {
+    const result = await pool.query(`
+      SELECT * 
+      FROM calendars
+      ORDER BY created_at DESC
+    `);
+
+    res.json({
+      count: result.rowCount,
+      calendars: result.rows,
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: "取得日曆資料失敗",
+      details: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
 };
 
 exports.updateCalendar = async (req, res) => {
@@ -87,7 +103,7 @@ exports.deleteCalendar = async (req, res) => {
       return res.status(403).json({ error: "Permission denied" });
     }
 
-    // CASCADE automactically delete related calendar_shared_users record (?)
+    // CASCADE automactically delete related calendar_shared_users record
     await pool.query("DELETE FROM calendars WHERE id = $1", [calendarId]);
 
     res.status(204).send();
