@@ -1,29 +1,12 @@
 const request = require("supertest");
 const app = require("../src/app/app");
-const pool = require("../src/config/db");
+const util = require("./utils");
 const jwt = require("jsonwebtoken");
 
-const databaseCleanup = async () => {
-  await pool.query("DELETE FROM users");
-  await pool.query("DELETE FROM user_tokens");
-  await pool.query("DELETE FROM user_auth_providers");
-  await pool.query("DELETE FROM calendars");
-  await pool.query("DELETE FROM calendar_shared_users");
-  await pool.query("DELETE FROM events");
-  await pool.query("DELETE FROM calendar_subscriptions");
-  await pool.query("DELETE FROM groups");
-  await pool.query("DELETE FROM group_members");
-  await pool.query("DELETE FROM user_availability");
-  await pool.query("DELETE FROM polls");
-  await pool.query("DELETE FROM poll_invited_users");
-  await pool.query("DELETE FROM poll_time_ranges");
-  await pool.query("DELETE FROM poll_votes");
-};
-
 describe("User API", () => {
-  let tokena, tokenb, uida, uidb;
-  beforeAll(async () => {
-    await databaseCleanup();
+  let tokena, tokenb, uida;
+  beforeEach(async () => {
+    await util.databaseCleanup();
     let res;
     res = await request(app)
       .post("/api/auth/register")
