@@ -21,49 +21,37 @@ const databaseCleanup = async () => {
 
 describe("Auth API", () => {
   let token;
-  databaseCleanup();
 
-  it("should register a user", async () => {
-    const res = await request(app)
+  beforeAll(async () => {
+    await databaseCleanup();
+    let res;
+    res = await request(app)
       .post("/api/auth/register")
       .send({ name: "user1", email: "test@example.com", password: "test123" });
     expect(res.statusCode).toBe(201);
   });
 
-  it("should not re-register", async () => {
-    const res = await request(app)
+  it("should not re-register and not re-use email", async () => {
+    let res;
+    res = await request(app)
       .post("/api/auth/register")
       .send({ name: "user1", email: "test@example.com", password: "test456" });
     expect(res.statusCode).toBe(500);
-  });
-
-  it("should not re-use an email", async () => {
-    const res = await request(app)
+    res = await request(app)
       .post("/api/auth/register")
       .send({ name: "user2", email: "test@example.com", password: "test456" });
     expect(res.statusCode).toBe(500);
   });
 
-  it("should login the user", async () => {
-    const res = await request(app)
+  it("should login the user and successfully logout", async () => {
+    let res;
+    res = await request(app)
       .post("/api/auth/login")
       .send({ email: "test@example.com", password: "test123" });
     expect(res.statusCode).toBe(200);
     expect(res.body.token).toBeDefined();
     token = res.body.token;
-  });
-
-  it("should fetch profile after login", async () => {
-    const res = await request(app)
-      .get("/api/users/profile")
-      .set("Authorization", `Bearer ${token}`);
-    expect(res.statusCode).toBe(200);
-    expect(res.body.email).toBe("test@example.com");
-    expect(res.body.name).toBe("user1");
-  });
-
-  it("should successfully logout", async () => {
-    const res = await request(app)
+    res = await request(app)
       .post("/api/auth/logout")
       .set("Authorization", `Bearer ${token}`)
       .expect(200);

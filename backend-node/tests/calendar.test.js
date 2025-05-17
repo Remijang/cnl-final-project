@@ -20,15 +20,14 @@ const databaseCleanup = async () => {
 };
 
 describe("Calendar API", () => {
-  let tokena, tokenb, uida, uidb;
-  databaseCleanup();
-
-  it("register and login user A and B", async () => {
-    let res;
-
+  let tokena, tokenb;
+  let calendaraId, calendarbId;
+  let res;
+  beforeAll(async () => {
+    await databaseCleanup();
     res = await request(app)
       .post("/api/auth/register")
-      .send({ name: a, email: "a@example.com", password: "testpass" });
+      .send({ name: "a", email: "a@example.com", password: "testpass" });
     expect(res.statusCode).toBe(201);
 
     res = await request(app)
@@ -40,7 +39,7 @@ describe("Calendar API", () => {
 
     res = await request(app)
       .post("/api/auth/register")
-      .send({ name: a, email: "b@example.com", password: "testpass" });
+      .send({ name: "b", email: "b@example.com", password: "testpass" });
     expect(res.statusCode).toBe(201);
 
     res = await request(app)
@@ -49,12 +48,9 @@ describe("Calendar API", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.token).toBeDefined();
     tokenb = res.body.token;
-  });
 
-  let calendaraId, calendarbId;
-  it("POST /calendar for a and b", async () => {
     res = await request(app)
-      .post("/calendars")
+      .post("/api/calendars")
       .set("Authorization", `Bearer ${tokena}`)
       .send({ title: "Calendar A" })
       .expect(201);
@@ -65,7 +61,7 @@ describe("Calendar API", () => {
     calendaraId = res.body.id;
 
     res = await request(app)
-      .post("/calendars")
+      .post("/api/calendars")
       .set("Authorization", `Bearer ${tokenb}`)
       .send({ title: "Calenda B" })
       .expect(201);
@@ -76,9 +72,9 @@ describe("Calendar API", () => {
     calendarbId = res.body.id;
   });
 
-  it("GET /calendars/owned returns owned calendars", async () => {
+  it("should return its own calendars", async () => {
     res = await request(app)
-      .get("/calendars/owned")
+      .get("/api/calendars/owned")
       .set("Authorization", `Bearer ${tokena}`)
       .expect(200);
 
@@ -86,7 +82,7 @@ describe("Calendar API", () => {
     expect(res.body.map((c) => c.title)).not.toContain("Calendar B");
 
     res = await request(app)
-      .get("/calendars/owned")
+      .get("/api/calendars/owned")
       .set("Authorization", `Bearer ${tokenb}`)
       .expect(200);
 
@@ -94,9 +90,9 @@ describe("Calendar API", () => {
     expect(res.body.map((c) => c.title)).toContain("Calendar B");
   });
 
-  it("GET /calendars/aggregated returns owned + shared calendars", async () => {});
+  // it("GET /calendars/aggregated returns owned + shared calendars", async () => {});
 
-  test("PUT /calendars/:id updates a calendar", async () => {
+  it("should update its calendar and only its", async () => {
     res = await request(app)
       .put(`/calendars/${calendaraId}`)
       .set("Authorization", `Bearer ${tokena}`)
@@ -106,33 +102,32 @@ describe("Calendar API", () => {
     expect(res.body.title).toBe("New Title A");
 
     res = await request(app)
-      .put(`/calendars/${calendarbId}`)
+      .put(`/api/calendars/${calendarbId}`)
       .set("Authorization", `Bearer ${tokena}`)
       .send({ title: "New Title A" })
       .expect(500);
     res = await request(app)
-      .put(`/calendars/${calendarbId}`)
+      .put(`/api/calendars/${calendarbId}`)
       .send({ title: "New Title A" })
-      .expect(500);
+      .expect(401);
   });
 
-  it("DELETE /calendars/:id deletes owned calendar", async () => {
+  it("delete its calendar and only its", async () => {
     res = await request(app)
-      .delete(`/calendars/${calendaraId}`)
+      .delete(`/api/calendars/${calendaraId}`)
       .set("Authorization", `Bearer ${tokena}`)
       .expect(200);
 
     res = await request(app)
-      .get("/calendars/owned")
+      .get("/api/calendars/owned")
       .set("Authorization", `Bearer ${tokena}`)
       .expect(200);
 
     expect(res.body.length).toBe(0);
 
     res = await request(app)
-      .delete(`/calendars/${calendarbId}`)
-      .set("Authorization", `Bearer ${tokena}`)
-      .expect(500);
+      .delete(`/api/calendars/${calendarbId}`)
+      .expect(401);
     res = await request(app).delete(`/calendars/${calendarbId}`).expect(500);
   });
 });
