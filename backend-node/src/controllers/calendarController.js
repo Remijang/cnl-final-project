@@ -74,7 +74,7 @@ exports.updateCalendar = async (req, res) => {
 
     // Update timestamp and title
     const result = await pool.query(
-      "UPDATE calendars SET title = $1, updated_at = NOW() WHERE id = $2 RETURNING *",
+      "UPDATE calendars SET title = $1, updated_at = NOW() WHERE id = $2 RETURNING id, title",
       [title, calendarId]
     );
 
@@ -82,7 +82,7 @@ exports.updateCalendar = async (req, res) => {
       return res.status(404).json({ error: "Calendar not found" });
     }
 
-    res.json(result.rows[0]);
+    res.status(201).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -108,9 +108,12 @@ exports.deleteCalendar = async (req, res) => {
     }
 
     // CASCADE automactically delete related calendar_shared_users record
-    await pool.query("DELETE FROM calendars WHERE id = $1", [calendarId]);
+    await pool.query(
+      "DELETE FROM calendars WHERE id = $1 RETURNING id, title",
+      [calendarId]
+    );
 
-    res.status(204).send();
+    res.status(201).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
