@@ -59,7 +59,7 @@ describe("Auth API", () => {
       .set("Authorization", `Bearer ${token}`);
     expect(res.statusCode).toBe(200);
     expect(res.body.email).toBe("test@example.com");
-    expect(res.body.id).toBe("user1");
+    expect(res.body.name).toBe("user1");
   });
 
   it("should successfully logout", async () => {

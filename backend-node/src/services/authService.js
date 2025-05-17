@@ -1,16 +1,39 @@
 const pool = require("../config/db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const authenticate = require("../middleware/authMiddleware");
+const { v4: uuidv4 } = require("uuid");
 
 exports.register = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, name } = req.body;
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query(
-      "INSERT INTO users (email, hashed_password) VALUES ($1, $2)",
-      [email, hashedPassword]
+    // check if email is used
+    const result_email = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
     );
-    res.status(201).json({ message: "User registered" });
+    if (result_email.rows.length > 0) {
+      return res.status(500).json({ message: "Email has already been used" });
+    }
+    // check if username is used
+    const result_name = await pool.query(
+      "SELECT * FROM users WHERE name = $1",
+      [name]
+    );
+    if (result_name.rows.length > 0) {
+      return res
+        .status(500)
+        .json({ message: "This username has already been used" });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUserResult = await pool.query(
+      "INSERT INTO users (name, email, hashed_password) VALUES ($1, $2, $3) RETURNING id, email, name",
+      [name, email, hashedPassword]
+    );
+    const newUser = newUserResult.rows[0];
+    res
+      .status(201)
+      .json({ message: "User registered successfully", user: newUser });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -23,11 +46,25 @@ exports.login = async (req, res) => {
       email,
     ]);
     const user = result.rows[0];
-    if (user && (await bcrypt.compare(password, user.hashed_password))) {
+    if (
+      user &&
+      user.hashed_password &&
+      (await bcrypt.compare(password, user.hashed_password))
+    ) {
       const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-        expiresIn: "1d",
+        expiresIn: process.env.JWT_EXPIRES_IN || "1d",
       });
-      res.json({ token });
+
+      // Store the token in the user_tokens table
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 1); // Default to 1 day expiration
+
+      await pool.query(
+        "INSERT INTO user_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)",
+        [user.id, token, expiresAt]
+      );
+
+      res.status(200).json({ token });
     } else {
       res.status(401).json({ message: "Invalid credentials" });
     }
@@ -36,6 +73,112 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.logout = async (req, res) => {
-  throw new Error("Unimplemented!"); // message: Logged out successfully
+exports.logout = [
+  authenticate,
+  async (req, res) => {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.sendStatus(204); // No content, as there's no token to invalidate
+    }
+
+    try {
+      const result = await pool.query(
+        "UPDATE user_tokens SET is_revoked = TRUE WHERE token = $1",
+        [token]
+      );
+
+      if (result.rowCount > 0) {
+        res.status(200).json({ message: "Logged out successfully" });
+      } else {
+        // Token might not be found in our database, but client-side should still clear it
+        res.status(200).json({ message: "Logged out successfully" });
+      }
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+];
+
+exports.googleAuth = async (req, res) => {
+  const { name, email, googleId, avatarUrl } = req.body;
+
+  try {
+    // Check if a user with the Google ID already exists
+    const existingGoogleUserResult = await pool.query(
+      "SELECT * FROM users WHERE google_id = $1",
+      [googleId]
+    );
+
+    if (existingGoogleUserResult.rows.length > 0) {
+      const user = existingGoogleUserResult.rows[0];
+      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+      });
+
+      // Store the token
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 1);
+
+      await pool.query(
+        "INSERT INTO user_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)",
+        [user.id, token, expiresAt]
+      );
+
+      return res.status(200).json({ token });
+    }
+
+    // Check if a user with the email already exists (but without Google ID)
+    const existingEmailUserResult = await pool.query(
+      "SELECT * FROM users WHERE email = $1 AND google_id IS NULL",
+      [email]
+    );
+
+    if (existingEmailUserResult.rows.length > 0) {
+      // Link the Google account to the existing user
+      const user = existingEmailUserResult.rows[0];
+      await pool.query(
+        "UPDATE users SET google_id = $1, avatar_url = $2, name = $3 WHERE id = $4",
+        [googleId, avatarUrl, name, user.id]
+      );
+      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+      });
+
+      // Store the token
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 1);
+
+      await pool.query(
+        "INSERT INTO user_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)",
+        [user.id, token, expiresAt]
+      );
+
+      return res.status(200).json({ token });
+    }
+
+    // Create a new user with Google information
+    const newUserResult = await pool.query(
+      "INSERT INTO users (name, email, google_id, avatar_url) VALUES ($1, $2, $3, $4) RETURNING id, email, name, avatar_url, google_id",
+      [name, email, googleId, avatarUrl]
+    );
+    const newUser = newUserResult.rows[0];
+    const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+    });
+
+    // Store the token
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 1);
+
+    await pool.query(
+      "INSERT INTO user_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)",
+      [newUser.id, token, expiresAt]
+    );
+
+    res.status(201).json({ token });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
