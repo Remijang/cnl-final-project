@@ -63,7 +63,7 @@ describe("Calendar API", () => {
     res = await request(app)
       .post("/api/calendars")
       .set("Authorization", `Bearer ${tokenb}`)
-      .send({ title: "Calenda B" })
+      .send({ title: "Calendar B" })
       .expect(201);
 
     expect(res.body.title).toBe("Calendar B");
