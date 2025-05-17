@@ -33,17 +33,17 @@ exports.getAggregatedCalendar = async (req, res) => {
 exports.updateCalendar = async (req, res) => {
   const { id: calendarId } = req.params;
   const { title } = req.body;
-  const userId = req.user.id; // 假设用户身份已通过中间件验证
+  const userId = req.user.id;
 
   try {
-    // 1. 权限验证：用户需为拥有者或有写入权限
+    // Permission check： owner or has write permission
     const permissionCheck = await pool.query(
       `SELECT EXISTS(
         SELECT 1 FROM calendars 
         WHERE id = $1 AND owner_id = $2
         UNION
         SELECT 1 FROM calendar_shared_users 
-        WHERE calendar_id = $1 AND user_id = $2 AND permission IN ('write', 'admin')
+        WHERE calendar_id = $1 AND user_id = $2 AND permission IN ('write')
       ) AS has_permission`,
       [calendarId, userId]
     );
@@ -52,7 +52,7 @@ exports.updateCalendar = async (req, res) => {
       return res.status(403).json({ error: "Permission denied" });
     }
 
-    // 2. 执行更新
+    // Update timestamp and title
     const result = await pool.query(
       "UPDATE calendars SET title = $1, updated_at = NOW() WHERE id = $2 RETURNING *",
       [title, calendarId]
@@ -69,11 +69,11 @@ exports.updateCalendar = async (req, res) => {
 };
 
 exports.deleteCalendar = async (req, res) => {
-  const { id: calendarId } = req.params;
+  const { id: calendarId } = req.params; // store in new variable calendarId
   const userId = req.user.id;
 
   try {
-    // permission check：only owner can delete
+    // Permission check：only owner can delete
     const ownershipCheck = await pool.query(
       "SELECT owner_id FROM calendars WHERE id = $1",
       [calendarId]
@@ -87,7 +87,7 @@ exports.deleteCalendar = async (req, res) => {
       return res.status(403).json({ error: "Permission denied" });
     }
 
-    // 2. 执行删除（CASCADE 会自动删除关联的 calendar_shared_users 记录）
+    // CASCADE automactically delete related calendar_shared_users record (?)
     await pool.query("DELETE FROM calendars WHERE id = $1", [calendarId]);
 
     res.status(204).send();
