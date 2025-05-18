@@ -54,11 +54,22 @@ exports.getSubscribedCalendar = async (req, res) => {
       `SELECT c.*
        FROM calendars c
        WHERE c.owner_id = $1
+
        UNION
+       
        SELECT c.*
        FROM calendars c
        JOIN calendar_subscriptions cs ON c.id = cs.calendar_id
-       WHERE cs.user_id = $1`,
+       WHERE c.visibility = TRUE AND cs.user_id = $1
+       
+       UNION
+       
+       SELECT c.*
+       FROM calendars c
+       JOIN calendar_subscriptions cs ON c.id = cs.calendar_id
+       JOIN calendar_shared_users csu ON c.id = csu.calendar_id
+       WHERE csu.user_id = $1 AND csu.permission IN ('read', 'write')
+       )`,
       [userId]
     );
 
@@ -76,12 +87,16 @@ exports.getAggregatedCalendar = async (req, res) => {
 
     if (userId) {
       query = `
-        SELECT * FROM calendars WHERE visibility = TRUE
+        SELECT * 
+        FROM calendars 
+        WHERE visibility = TRUE
+
         UNION
+        
         SELECT c.*
         FROM calendars c
         JOIN calendar_shared_users csu ON c.id = csu.calendar_id
-        WHERE csu.user_id = $1 AND csu.permission = 'read'
+        WHERE csu.user_id = $1 AND csu.permission IN ('read', 'write')
         ORDER BY created_at DESC;
       `;
       queryParams = [userId];

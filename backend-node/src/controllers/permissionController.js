@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const subscriptionController = require("./subscriptionController");
 
 exports.visibilityOn = async (req, res) => {
   const { calendarId } = req.params;
@@ -340,6 +341,11 @@ exports.removePermission = async (req, res) => {
       [calendarId, removeUserId]
     );
 
+    const unsubscribe = await subscriptionController.unsubscribeCalendar(
+      req,
+      res
+    );
+
     res.status(200).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -351,7 +357,7 @@ exports.permissionRead = async (calendarId, userId) => {
   const permissionCheck = await pool.query(
     `SELECT EXISTS(
       SELECT 1 FROM calendars 
-      WHERE id = $1 AND owner_id = $2
+      WHERE id = $1 AND owner_id = $2 AND read_link_enable = TRUE
       UNION
       SELECT 1 FROM calendar_shared_users 
       WHERE calendar_id = $1 AND user_id = $2 AND permission IN ('read', 'write')
@@ -366,7 +372,7 @@ exports.permissionWrite = async (calendarId, userId) => {
   const permissionCheck = await pool.query(
     `SELECT EXISTS(
       SELECT 1 FROM calendars 
-      WHERE id = $1 AND owner_id = $2
+      WHERE id = $1 AND owner_id = $2 AND write_link_enable = TRUE
       UNION
       SELECT 1 FROM calendar_shared_users 
       WHERE calendar_id = $1 AND user_id = $2 AND permission = 'write'
