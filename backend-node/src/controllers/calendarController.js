@@ -50,8 +50,8 @@ exports.updateCalendar = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // Permission check： owner or has write permission
-    if (!(await this.calendarPermission(calendarId, userId))) {
+    // Write permission check
+    if (!(await this.calendarPermissionWrite(calendarId, userId))) {
       return res.status(403).json({ error: "Permission denied" });
     }
 
@@ -102,15 +102,31 @@ exports.deleteCalendar = async (req, res) => {
   }
 };
 
-exports.calendarPermission = async (calendarId, userId) => {
+exports.calendarPermissionRead = async (calendarId, userId) => {
+  // Owner, shared user with read or write permission
   const permissionCheck = await pool.query(
     `SELECT EXISTS(
           SELECT 1 FROM calendars 
           WHERE id = $1 AND owner_id = $2
           UNION
           SELECT 1 FROM calendar_shared_users 
-          WHERE calendar_id = $1 AND user_id = $2 AND permission IN ('write')
+          WHERE calendar_id = $1 AND user_id = $2 AND permission IN ('read', 'write')
         ) AS has_permission`,
+    [calendarId, userId]
+  );
+  return permissionCheck.rows[0].has_permission;
+};
+
+exports.calendarPermissionWrite = async (calendarId, userId) => {
+  // Owner, shared user with write permission
+  const permissionCheck = await pool.query(
+    `SELECT EXISTS(
+      SELECT 1 FROM calendars 
+      WHERE id = $1 AND owner_id = $2
+      UNION
+      SELECT 1 FROM calendar_shared_users 
+      WHERE calendar_id = $1 AND user_id = $2 AND permission = 'write'
+    ) AS has_permission`,
     [calendarId, userId]
   );
   return permissionCheck.rows[0].has_permission;

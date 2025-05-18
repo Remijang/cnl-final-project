@@ -6,8 +6,10 @@ exports.getEventsByCalendar = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // Permission check
-    if (!(await calendarController.calendarPermission(calendarId, userId))) {
+    // Read permission check
+    if (
+      !(await calendarController.calendarPermissionRead(calendarId, userId))
+    ) {
       return res.status(403).json({ error: "Permission denied" });
     }
 
@@ -30,7 +32,10 @@ exports.createEvent = async (req, res) => {
   }
 
   try {
-    if (!(await calendarController.calendarPermission(calendar_id, userId))) {
+    // Write permission check
+    if (
+      !(await calendarController.calendarPermissionWrite(calendar_id, userId))
+    ) {
       return res.status(403).json({ error: "Permission denied" });
     }
     const result = await pool.query(
@@ -50,8 +55,10 @@ exports.updateEvent = async (req, res) => {
 
   try {
     const calendarId = await findCalendarIdbyEventId(id);
-    // Permission check
-    if (!(await calendarController.calendarPermission(calendarId, userId))) {
+    // Write permission check
+    if (
+      !(await calendarController.calendarPermissionWrite(calendarId, userId))
+    ) {
       return res.status(403).json({ error: "Permission denied" });
     }
     const result = await pool.query(
@@ -79,8 +86,10 @@ exports.deleteEvent = async (req, res) => {
   const userId = req.user.id;
   try {
     const calendarId = await findCalendarIdbyEventId(id);
-    // Permission check
-    if (!(await calendarController.calendarPermission(calendarId, userId))) {
+    // Write permission check
+    if (
+      !(await calendarController.calendarPermissionWrite(calendarId, userId))
+    ) {
       return res.status(403).json({ error: "Permission denied" });
     }
     await pool.query("DELETE FROM events WHERE id = $1", [id]);
