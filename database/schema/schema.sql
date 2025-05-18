@@ -37,6 +37,11 @@ CREATE TABLE calendars (
     id SERIAL PRIMARY KEY,
     owner_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
+    visibility BOOLEAN DEFAULT FALSE,
+    read_link VARCHAR(32) NOT NULL,
+    read_link_enable BOOLEAN DEFAULT FALSE,
+    write_link VARCHAR(32) NOT NULL,
+    write_link_enable BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
