@@ -1,7 +1,6 @@
 const pool = require("../config/db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { v4: uuidv4 } = require("uuid");
 
 exports.register = async (req, res) => {
   const { email, password, name } = req.body;
