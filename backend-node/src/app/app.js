@@ -23,7 +23,7 @@ app.use("/api/calendars", authMiddleware, calendarRoutes);
 app.use("/api/events", authMiddleware, eventRoutes);
 app.use("/api/subscriptions", authMiddleware, subscriptionRoutes);
 app.use("/api/groups", authMiddleware, groupRoutes);
-app.use("/api/avaiability", authMiddleware, availabilityRoutes);
+app.use("/api/availability", authMiddleware, availabilityRoutes);
 app.use("/api/polls", authMiddleware, pollRoutes);
 
 module.exports = app;

@@ -44,7 +44,7 @@ CREATE TABLE calendars (
 CREATE TABLE calendar_shared_users (
     calendar_id INTEGER REFERENCES calendars(id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    permission TEXT DEFAULT 'write', -- 'read', 'write', 'admin'
+    permission TEXT DEFAULT 'write', -- 'read', 'write'
     PRIMARY KEY (calendar_id, user_id)
 );
 
@@ -54,8 +54,8 @@ CREATE TABLE events (
     calendar_id INTEGER REFERENCES calendars(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    start_time TIMESTAMP NOT NULL,
-    end_time TIMESTAMP NOT NULL,
+    start_time TIMESTAMP(0) NOT NULL,
+    end_time TIMESTAMP(0) NOT NULL,
     is_all_day BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
@@ -88,8 +88,8 @@ CREATE TABLE user_availability (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     available_date DATE NOT NULL,
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
+    start_time TIME(0) NOT NULL,
+    end_time TIME(0) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -109,8 +109,8 @@ CREATE TABLE polls (
 CREATE TABLE poll_time_ranges (
     id SERIAL PRIMARY KEY,
     poll_id INTEGER REFERENCES polls(id) ON DELETE CASCADE,
-    start_time TIMESTAMP NOT NULL,
-    end_time TIMESTAMP NOT NULL
+    start_time TIMESTAMP(0) NOT NULL,
+    end_time TIMESTAMP(0) NOT NULL
 );
 
 ALTER TABLE polls
