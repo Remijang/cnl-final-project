@@ -43,7 +43,10 @@ exports.addGroupUser = async (req, res) => {
   const userId = req.user.id;
   try {
     // Check ownership
-    const group = await pool.query("SELECT owner_id FROM groups WHERE id = $1", [groupId]);
+    const group = await pool.query(
+      "SELECT owner_id FROM groups WHERE id = $1",
+      [groupId]
+    );
     if (!group.rows.length || group.rows[0].owner_id !== userId) {
       return res.status(403).json({ error: "Permission denied" });
     }
@@ -65,7 +68,10 @@ exports.removeGroupUser = async (req, res) => {
   const userId = req.user.id;
   try {
     // Check ownership
-    const group = await pool.query("SELECT owner_id FROM groups WHERE id = $1", [groupId]);
+    const group = await pool.query(
+      "SELECT owner_id FROM groups WHERE id = $1",
+      [groupId]
+    );
     if (!group.rows.length || group.rows[0].owner_id !== userId) {
       return res.status(403).json({ error: "Permission denied" });
     }
@@ -94,7 +100,9 @@ exports.getGroup = async (req, res) => {
       return res.status(403).json({ error: "Not a group member" });
     }
     // Get group info
-    const group = await pool.query("SELECT * FROM groups WHERE id = $1", [groupId]);
+    const group = await pool.query("SELECT * FROM groups WHERE id = $1", [
+      groupId,
+    ]);
     const members = await pool.query(
       `SELECT u.id, u.name, u.email FROM users u
        JOIN group_members gm ON u.id = gm.user_id

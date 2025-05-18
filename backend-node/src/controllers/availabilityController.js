@@ -1,6 +1,5 @@
 const pool = require("../config/db");
 
-// 設定自己有空的時間
 exports.setAvailability = async (req, res) => {
   const userId = req.user.id;
   const { available_date, start_time, end_time } = req.body;
@@ -18,7 +17,6 @@ exports.setAvailability = async (req, res) => {
   }
 };
 
-// 查看群組內大家有空的時間
 exports.checkgroupAvailability = async (req, res) => {
   const { groupId } = req.params;
   const { day } = req.query;
@@ -28,7 +26,7 @@ exports.checkgroupAvailability = async (req, res) => {
       "SELECT user_id FROM group_members WHERE group_id = $1",
       [groupId]
     );
-    const userIds = membersResult.rows.map(row => row.user_id);
+    const userIds = membersResult.rows.map((row) => row.user_id);
     if (userIds.length === 0) {
       return res.json([]);
     }
