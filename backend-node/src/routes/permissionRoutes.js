@@ -14,12 +14,8 @@ router.get(
   permissionController.claimWritePermission
 );
 router.delete(
-  "/:calendarId/remove/read/:removeUserId",
-  permissionController.removeReadPermission
-);
-router.delete(
-  "/:calendarId/remove/write/:removeUserId",
-  permissionController.removeWritePermission
+  "/:calendarId/remove/:removeUserId",
+  permissionController.removePermission
 );
 
 module.exports = router;

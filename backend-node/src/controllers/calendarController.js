@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const permissionController = require("./permissionController");
 
 exports.createCalendar = async (req, res) => {
   const { title } = req.body;
@@ -31,16 +32,44 @@ exports.getUserCalendar = async (req, res) => {
 };
 
 exports.getAggregatedCalendar = async (req, res) => {
+  const userId = req.user.id;
   try {
-    const result = await pool.query(`
-      SELECT * 
-      FROM calendars
-      ORDER BY created_at DESC
-    `);
+    let query;
+    let queryParams = [];
 
-    res.json(result.rows);
+    if (userId) {
+      query = `
+        SELECT * FROM calendars WHERE visibility = TRUE
+        UNION
+        SELECT c.*
+        FROM calendars c
+        JOIN calendar_shared_users csu ON c.id = csu.calendar_id
+        WHERE csu.user_id = $1 AND csu.permission = 'read'
+        ORDER BY created_at DESC;
+      `;
+      queryParams = [userId];
+    } else {
+      query = `
+        SELECT *
+        FROM calendars
+        WHERE visibility = TRUE
+        ORDER BY created_at DESC;
+      `;
+      queryParams = [];
+    }
+
+    const result = await pool.query(query, queryParams);
+    const calendarCount = result.rows.length;
+    const calendars = result.rows;
+
+    res.status(200).json({
+      count: calendarCount,
+      calendars: calendars,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch calendars.", details: err.message });
   }
 };
 
@@ -51,7 +80,7 @@ exports.updateCalendar = async (req, res) => {
 
   try {
     // Write permission check
-    if (!(await this.calendarPermissionWrite(calendarId, userId))) {
+    if (!(await permissionController.permissionWrite(calendarId, userId))) {
       return res.status(403).json({ error: "Permission denied" });
     }
 
@@ -85,14 +114,16 @@ exports.deleteCalendar = async (req, res) => {
     if (ownershipCheck.rowCount === 0) {
       return res.status(404).json({ error: "Calendar not found" });
     }
-
     if (ownershipCheck.rows[0].owner_id !== userId) {
       return res.status(403).json({ error: "Permission denied" });
     }
 
     // CASCADE automactically delete related calendar_shared_users record
     const result = await pool.query(
-      "DELETE FROM calendars WHERE id = $1 RETURNING id, title",
+      `DELETE 
+      FROM calendars 
+      WHERE id = $1 
+      RETURNING id, title`,
       [calendarId]
     );
 
@@ -100,34 +131,4 @@ exports.deleteCalendar = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-};
-
-exports.calendarPermissionRead = async (calendarId, userId) => {
-  // Owner, shared user with read or write permission
-  const permissionCheck = await pool.query(
-    `SELECT EXISTS(
-          SELECT 1 FROM calendars 
-          WHERE id = $1 AND owner_id = $2
-          UNION
-          SELECT 1 FROM calendar_shared_users 
-          WHERE calendar_id = $1 AND user_id = $2 AND permission IN ('read', 'write')
-        ) AS has_permission`,
-    [calendarId, userId]
-  );
-  return permissionCheck.rows[0].has_permission;
-};
-
-exports.calendarPermissionWrite = async (calendarId, userId) => {
-  // Owner, shared user with write permission
-  const permissionCheck = await pool.query(
-    `SELECT EXISTS(
-      SELECT 1 FROM calendars 
-      WHERE id = $1 AND owner_id = $2
-      UNION
-      SELECT 1 FROM calendar_shared_users 
-      WHERE calendar_id = $1 AND user_id = $2 AND permission = 'write'
-    ) AS has_permission`,
-    [calendarId, userId]
-  );
-  return permissionCheck.rows[0].has_permission;
 };

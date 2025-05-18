@@ -1,5 +1,5 @@
 const pool = require("../config/db");
-const calendarController = require("./calendarController");
+const permissionController = require("./permissionController");
 
 exports.getEventsByCalendar = async (req, res) => {
   const { calendarId } = req.params;
@@ -7,9 +7,7 @@ exports.getEventsByCalendar = async (req, res) => {
 
   try {
     // Read permission check
-    if (
-      !(await calendarController.calendarPermissionRead(calendarId, userId))
-    ) {
+    if (!(await permissionController.permissionRead(calendarId, userId))) {
       return res.status(403).json({ error: "Permission denied" });
     }
 
@@ -33,9 +31,7 @@ exports.createEvent = async (req, res) => {
 
   try {
     // Write permission check
-    if (
-      !(await calendarController.calendarPermissionWrite(calendar_id, userId))
-    ) {
+    if (!(await permissionController.permissionWrite(calendar_id, userId))) {
       return res.status(403).json({ error: "Permission denied" });
     }
     const result = await pool.query(
@@ -56,9 +52,7 @@ exports.updateEvent = async (req, res) => {
   try {
     const calendarId = await findCalendarIdbyEventId(id);
     // Write permission check
-    if (
-      !(await calendarController.calendarPermissionWrite(calendarId, userId))
-    ) {
+    if (!(await permissionController.permissionWrite(calendarId, userId))) {
       return res.status(403).json({ error: "Permission denied" });
     }
     const result = await pool.query(
@@ -87,11 +81,21 @@ exports.deleteEvent = async (req, res) => {
   try {
     const calendarId = await findCalendarIdbyEventId(id);
     // Write permission check
-    if (
-      !(await calendarController.calendarPermissionWrite(calendarId, userId))
-    ) {
+    if (!(await permissionController.permissionWrite(calendarId, userId))) {
       return res.status(403).json({ error: "Permission denied" });
     }
+
+    const existCheck = await pool.query(
+      `SELECT 1
+      FROM events
+      WHERE id = $1`,
+      [id]
+    );
+
+    if (existCheck.rowCount === 0) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
     await pool.query("DELETE FROM events WHERE id = $1", [id]);
     res.status(204).end();
   } catch (err) {
