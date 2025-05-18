@@ -56,20 +56,19 @@ exports.getSubscribedCalendar = async (req, res) => {
        WHERE c.owner_id = $1
 
        UNION
-       
+
        SELECT c.*
        FROM calendars c
        JOIN calendar_subscriptions cs ON c.id = cs.calendar_id
-       WHERE c.visibility = TRUE AND cs.user_id = $1
-       
+       WHERE cs.user_id = $1
+
        UNION
-       
+
        SELECT c.*
        FROM calendars c
-       JOIN calendar_subscriptions cs ON c.id = cs.calendar_id
        JOIN calendar_shared_users csu ON c.id = csu.calendar_id
        WHERE csu.user_id = $1 AND csu.permission IN ('read', 'write')
-       )`,
+       `,
       [userId]
     );
 

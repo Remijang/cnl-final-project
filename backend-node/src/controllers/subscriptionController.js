@@ -4,6 +4,7 @@ const permissionController = require("./permissionController");
 exports.subscribeCalendar = async (req, res) => {
   const { calendarId } = req.params;
   try {
+    const userId = req.user.id;
     const permissionCheck = await permissionController.permissionRead(
       calendarId,
       userId
@@ -12,7 +13,6 @@ exports.subscribeCalendar = async (req, res) => {
       return res.status(403).json({ error: "Permission denied" });
     }
 
-    const userId = req.user.id;
     const check_if_exist = await pool.query(
       "SELECT user_id, calendar_id, subscribed_at FROM calendar_subscriptions WHERE user_id = $1 AND calendar_id = $2",
       [userId, calendarId]

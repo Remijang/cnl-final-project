@@ -357,7 +357,7 @@ exports.permissionRead = async (calendarId, userId) => {
   const permissionCheck = await pool.query(
     `SELECT EXISTS(
       SELECT 1 FROM calendars 
-      WHERE id = $1 AND owner_id = $2 AND read_link_enable = TRUE
+      WHERE id = $1 AND (owner_id = $2 OR visibility = TRUE)
       UNION
       SELECT 1 FROM calendar_shared_users 
       WHERE calendar_id = $1 AND user_id = $2 AND permission IN ('read', 'write')
@@ -372,7 +372,7 @@ exports.permissionWrite = async (calendarId, userId) => {
   const permissionCheck = await pool.query(
     `SELECT EXISTS(
       SELECT 1 FROM calendars 
-      WHERE id = $1 AND owner_id = $2 AND write_link_enable = TRUE
+      WHERE id = $1 AND owner_id = $2
       UNION
       SELECT 1 FROM calendar_shared_users 
       WHERE calendar_id = $1 AND user_id = $2 AND permission = 'write'

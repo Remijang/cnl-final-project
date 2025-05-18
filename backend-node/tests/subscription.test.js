@@ -53,6 +53,14 @@ describe("Calendar API", () => {
     expect(res.body.id).toBeDefined();
 
     calendarbId = res.body.id;
+
+    res = await request(app)
+      .post(`/api/permission/${calendarbId}/visibility/on`)
+      .set("Authorization", `Bearer ${tokenb}`)
+      .expect(200);
+
+    expect(res.body.visibility).toBe(true);
+    expect(res.body.id).toBeDefined();
   });
 
   it("should subscribe to a calendar", async () => {
