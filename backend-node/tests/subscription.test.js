@@ -63,7 +63,7 @@ describe("Calendar API", () => {
       .set("Authorization", `Bearer ${tokena}`)
       .expect(200);
     res = await request(app)
-      .get("/api/calendars")
+      .get("/api/calendars/subscribed")
       .set("Authorization", `Bearer ${tokena}`)
       .expect(200);
 
