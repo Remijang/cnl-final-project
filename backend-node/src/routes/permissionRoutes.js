@@ -11,11 +11,15 @@ router.post("/:calendarId/write/off", permissionController.writeLinkOff);
 router.get("/:calendarId/read/claim", permissionController.claimReadPermission);
 router.get(
   "/:calendarId/write/claim",
-  permissionController.claimReadPermission
+  permissionController.claimWritePermission
 );
 router.delete(
-  "/:calendarId/remove/:removeUserId",
-  permissionController.removePermission
+  "/:calendarId/remove/read/:removeUserId",
+  permissionController.removeReadPermission
+);
+router.delete(
+  "/:calendarId/remove/write/:removeUserId",
+  permissionController.removeWritePermission
 );
 
 module.exports = router;

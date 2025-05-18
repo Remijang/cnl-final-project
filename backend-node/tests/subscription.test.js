@@ -6,7 +6,7 @@ describe("Calendar API", () => {
   let tokena, tokenb;
   let calendaraId, calendarbId;
   let res;
-  beforeEach(async () => {
+  beforeAll(async () => {
     await util.databaseCleanup();
     res = await request(app)
       .post("/api/auth/register")

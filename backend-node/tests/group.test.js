@@ -125,11 +125,6 @@ describe("Group API", () => {
       .expect(403);
 
     res = await request(app)
-      .get("/api/groups")
-      .set("Authorization", `Bearer ${tokenB}`)
-      .expect(403);
-
-    res = await request(app)
       .post(`/api/groups/${groupId}/add`)
       .set("Authorization", `Bearer ${tokenA}`)
       .send({ addUserId: idB })

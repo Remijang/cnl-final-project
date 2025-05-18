@@ -10,13 +10,13 @@ exports.subscribeCalendar = async (req, res) => {
     );
 
     if (check_if_exist.rows.length === 1) {
-      res
+      return res
         .status(409)
         .json({ message: "User has already subscribed this calendar!" });
     }
 
     const result = await pool.query(
-      "INSERT INTO calendar_subscriptions (user_id, calendar_id) VALUES($1, $2) RETURNING user_id, calendar_id, subscribed_at",
+      "INSERT INTO calendar_subscriptions (user_id, calendar_id) VALUES ($1, $2) RETURNING user_id, calendar_id, subscribed_at",
       [userId, calendarId]
     );
     res.status(200).json(result.rows[0]);
@@ -36,7 +36,9 @@ exports.unsubscribeCalendar = async (req, res) => {
     );
 
     if (check_if_exist.rows.length === 0) {
-      res.status(404).json({ message: "User did not subscribe this calendar" });
+      return res
+        .status(404)
+        .json({ message: "User did not subscribe this calendar" });
     }
 
     const result = await pool.query(

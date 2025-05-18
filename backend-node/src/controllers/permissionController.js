@@ -26,10 +26,14 @@ exports.claimReadPermission = async (req, res) => {
   throw new Error("Unimplemented!");
 };
 
-exports.claimReadPermission = async (req, res) => {
+exports.claimWritePermission = async (req, res) => {
   throw new Error("Unimplemented!");
 };
 
-exports.removePermission = async (req, res) => {
+exports.removeReadPermission = async (req, res) => {
+  throw new Error("Unimplemented!");
+};
+
+exports.removeWritePermission = async (req, res) => {
   throw new Error("Unimplemented!");
 };

@@ -20,6 +20,7 @@ exports.setAvailability = async (req, res) => {
 exports.checkgroupAvailability = async (req, res) => {
   const { groupId } = req.params;
   const { day } = req.query;
+  const userId = req.user.id;
   try {
     // Get all user_ids in the group
     const membersResult = await pool.query(
@@ -27,8 +28,11 @@ exports.checkgroupAvailability = async (req, res) => {
       [groupId]
     );
     const userIds = membersResult.rows.map((row) => row.user_id);
+    if (!userIds.includes(userId)) {
+      return res.status(403).json({ error: "Permission Denied" });
+    }
     if (userIds.length === 0) {
-      return res.json([]);
+      return res.status(404).json({ error: "Group not found" });
     }
 
     // Get all availabilities for these users on the given day
