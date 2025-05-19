@@ -7,9 +7,12 @@ const LoginForm = ({ setToken }) => {
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (e) => {
+    console.log("login function:", login);
+    console.log("setToken is", setToken);
     e.preventDefault();
     try {
-      const token = await login({ email, password });
+      const result = await login({ email, password });
+      const token = result.token;
       localStorage.setItem("token", token);
       setToken(token);
     } catch (err) {
