@@ -87,7 +87,7 @@ exports.readLinkOn = async (req, res) => {
       `UPDATE calendars 
       SET read_link_enable = TRUE, updated_at = NOW() 
       WHERE id = $1 
-      RETURNING id, read_link_enable`,
+      RETURNING id, read_link_enable, read_link`,
       [calendarId]
     );
     res.status(200).json(result.rows[0]);
@@ -147,7 +147,7 @@ exports.writeLinkOn = async (req, res) => {
       `UPDATE calendars 
       SET write_link_enable = TRUE, updated_at = NOW() 
       WHERE id = $1 
-      RETURNING id, write_link_enable`,
+      RETURNING id, write_link_enable, write_link`,
       [calendarId]
     );
     res.status(200).json(result.rows[0]);
@@ -341,10 +341,7 @@ exports.removePermission = async (req, res) => {
       [calendarId, removeUserId]
     );
 
-    const unsubscribe = await subscriptionController.unsubscribeCalendar(
-      req,
-      res
-    );
+    await subscriptionController._unsubscribeCalendar(calendarId, removeUserId);
 
     res.status(200).json(result.rows[0]);
   } catch (err) {

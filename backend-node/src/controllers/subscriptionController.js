@@ -35,26 +35,30 @@ exports.subscribeCalendar = async (req, res) => {
   }
 };
 
+exports._unsubscribeCalendar = async (calendarId, removeUserId, res) => {
+  const check_if_exist = await pool.query(
+    "SELECT user_id, calendar_id, subscribed_at FROM calendar_subscriptions WHERE user_id = ANY($1) AND calendar_id = $2",
+    [removeUserId, calendarId]
+  );
+
+  if (check_if_exist.rowsCount === 0) {
+    return [];
+
+    res.status(404).json({ message: "User did not subscribe this calendar" });
+  }
+
+  const result = await pool.query(
+    "DELETE FROM calendar_subscriptions WHERE user_id = ANY($1) AND calendar_id = $2 RETURNING user_id, calendar_id, subscribed_at",
+    [removeUserId, calendarId]
+  );
+  res.status(200).json(result.rows[0]);
+};
+
 exports.unsubscribeCalendar = async (req, res) => {
   const { calendarId } = req.params;
+  const userId = req.user.id;
   try {
-    const userId = req.user.id;
-    const check_if_exist = await pool.query(
-      "SELECT user_id, calendar_id, subscribed_at FROM calendar_subscriptions WHERE user_id = $1 AND calendar_id = $2",
-      [userId, calendarId]
-    );
-
-    if (check_if_exist.rows.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "User did not subscribe this calendar" });
-    }
-
-    const result = await pool.query(
-      "DELETE FROM calendar_subscriptions WHERE user_id = $1 AND calendar_id = $2 RETURNING user_id, calendar_id, subscribed_at",
-      [userId, calendarId]
-    );
-    res.status(200).json(result.rows[0]);
+    await this._unsubscribeCalendar(calendarId, [userId], res);
   } catch (err) {
     console.error("Error fetching subscription:", err);
     res.status(500).json({ error: err.message });

@@ -2,7 +2,30 @@ const request = require("supertest");
 const app = require("../src/app/app");
 const util = require("./utils");
 
-describe("Calendar API", () => {
+let visibilityOn = async function (calendarId, token) {
+  res = await request(app)
+    .post(`/api/permission/${calendarId}/visibility/on`)
+    .set("Authorization", `Bearer ${token}`)
+    .expect(200);
+  expect(res.body.visibility).toBe(true);
+};
+
+let visibilityOff = async function (calendarId, token) {
+  res = await request(app)
+    .post(`/api/permission/${calendarId}/visibility/off`)
+    .set("Authorization", `Bearer ${token}`)
+    .expect(200);
+  expect(res.body.visibility).toBe(false);
+};
+
+let subscribe = async function (calendarId, token) {
+  res = await request(app)
+    .post(`/api/subscriptions/${calendarId}/subscribe`)
+    .set("Authorization", `Bearer ${token}`)
+    .expect(200);
+};
+
+describe("Subscription API", () => {
   let tokena, tokenb;
   let calendaraId, calendarbId;
   let res;
@@ -53,23 +76,16 @@ describe("Calendar API", () => {
     expect(res.body.id).toBeDefined();
 
     calendarbId = res.body.id;
-
-    res = await request(app)
-      .post(`/api/permission/${calendarbId}/visibility/on`)
-      .set("Authorization", `Bearer ${tokenb}`)
-      .expect(200);
-
-    expect(res.body.visibility).toBe(true);
-    expect(res.body.id).toBeDefined();
   });
 
   it("should subscribe to a calendar", async () => {
-    // add permission
     let res;
-    res = await request(app)
-      .post(`/api/subscriptions/${calendarbId}/subscribe`)
-      .set("Authorization", `Bearer ${tokena}`)
-      .expect(200);
+    // add read permission
+    await visibilityOn(calendarbId, tokenb);
+
+    // subscribe
+    await subscribe(calendarbId, tokena);
+
     res = await request(app)
       .get("/api/calendars/subscribed")
       .set("Authorization", `Bearer ${tokena}`)
@@ -79,12 +95,46 @@ describe("Calendar API", () => {
     expect(res.body.map((c) => c.title)).toContain("Calendar B");
   });
 
+  it("should return 409 if already subscribed", async () => {
+    await request(app)
+      .post(`/api/subscriptions/${calendarbId}/subscribe`)
+      .set("Authorization", `Bearer ${tokena}`)
+      .expect(409);
+  });
+
   it("should unsubscribe from a calendar", async () => {
     let res;
+
     res = await request(app)
       .post(`/api/subscriptions/${calendarbId}/unsubscribe`)
       .set("Authorization", `Bearer ${tokena}`)
       .expect(200);
+
+    res = await request(app)
+      .get("/api/calendars/subscribed")
+      .set("Authorization", `Bearer ${tokena}`)
+      .expect(200);
+
+    expect(res.body.map((c) => c.title)).toContain("Calendar A");
+    expect(res.body.map((c) => c.title)).not.toContain("Calendar B");
+  });
+
+  it("should unsubscribe to a calendar after the permission if off", async () => {
+    let res;
+    // subscribe
+    await subscribe(calendarbId, tokena);
+
+    // turn off the visibility
+    await visibilityOff(calendarbId, tokenb);
+
+    // calendar B should be unsubscribed
+    res = await request(app)
+      .get("/api/calendars/subscribed")
+      .set("Authorization", `Bearer ${tokena}`)
+      .expect(200);
+
+    expect(res.body.map((c) => c.title)).toContain("Calendar A");
+    expect(res.body.map((c) => c.title)).not.toContain("Calendar B");
   });
 
   it("should not unsubscribe an already unsubscribed calendar", async () => {
@@ -93,19 +143,5 @@ describe("Calendar API", () => {
       .post(`/api/subscriptions/${calendarbId}/unsubscribe`)
       .set("Authorization", `Bearer ${tokena}`)
       .expect(404);
-  });
-
-  it("should return 409 if already subscribed", async () => {
-    // check permission
-
-    await request(app)
-      .post(`/api/subscriptions/${calendarbId}/subscribe`)
-      .set("Authorization", `Bearer ${tokena}`)
-      .expect(200);
-
-    await request(app)
-      .post(`/api/subscriptions/${calendarbId}/subscribe`)
-      .set("Authorization", `Bearer ${tokena}`)
-      .expect(409);
   });
 });

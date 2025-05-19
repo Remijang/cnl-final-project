@@ -3,9 +3,10 @@ const router = express.Router();
 const pollController = require("../controllers/pollController");
 
 router.post("/", pollController.createPoll);
-router.put("/:pollId/inviteGroupPoll", pollController.inviteUserPoll);
+router.put("/:pollId/inviteUserPoll", pollController.inviteUserPoll);
+router.put("/:pollId/inviteGroupPoll", pollController.inviteGroupPoll);
 router.get("/listPoll", pollController.listPoll);
-router.get("/:pollId/checkPoll", pollController.checkPoll);
+router.get("/:pollId", pollController.checkPoll);
 router.post("/:pollId/votePoll", pollController.votePoll);
 router.put("/:pollId/updatePoll", pollController.updatePoll);
 router.get("/:pollId/:userId", pollController.getUserPoll);
