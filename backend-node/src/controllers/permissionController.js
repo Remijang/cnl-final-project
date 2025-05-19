@@ -58,9 +58,21 @@ exports.visibilityOff = async (req, res) => {
       RETURNING id, visibility`,
       [calendarId]
     );
+    const remainUsers = await pool.query(
+      `SELECT user_id
+            FROM calendar_shared_users 
+            WHERE calendar_id = $1 AND permission = 'read'`,
+      [calendarId]
+    );
+    const remainUserIds = remainUsers.rows.map((c) => c.user_id);
+    await subscriptionController._unsubscribeAllExcept(
+      calendarId,
+      remainUserIds
+    );
 
     res.status(200).json(result.rows[0]);
   } catch (err) {
+    console.log(err.message);
     res.status(500).json({ error: err.message });
   }
 };
@@ -118,6 +130,21 @@ exports.readLinkOff = async (req, res) => {
       WHERE id = $1 
       RETURNING id, read_link_enable`,
       [calendarId]
+    );
+
+    const removeUsers = await pool.query(
+      `DELETE 
+          FROM calendar_shared_users 
+          WHERE calendar_id = $1
+          RETURNING user_id`,
+      [calendarId]
+    );
+
+    const removeUserIds = removeUsers.rows.map((c) => c.user_id);
+
+    await subscriptionController._unsubscribeCalendar(
+      calendarId,
+      removeUserIds
     );
     res.status(200).json(result.rows[0]);
   } catch (err) {
@@ -181,15 +208,24 @@ exports.writeLinkOff = async (req, res) => {
       RETURNING id, write_link_enable`,
       [calendarId]
     );
-    res.status(200).json(result.rows[0]);
+
+    const removeUserIds = await pool.query(
+      `DELETE 
+        FROM calendar_shared_users 
+        WHERE calendar_id = $1 and permission = 'write'
+        RETURNING user_id`,
+      [calendarId]
+    );
+    res.status(200).json(removeUserIds.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
 exports.claimReadPermission = async (req, res) => {
-  const { calendarId, key } = req.query;
+  const { key } = req.query;
   const userId = req.user.id;
+  const { calendarId } = req.params;
   try {
     const keyCheck = await pool.query(
       `SELECT id, read_link_enable 
@@ -201,7 +237,7 @@ exports.claimReadPermission = async (req, res) => {
     if (keyCheck.rowCount === 0) {
       return res.status(404).json({ error: "Calendar not found" });
     }
-    if (keyCheck.rows[0].id.toString() !== calendarId) {
+    if (keyCheck.rows[0].id != calendarId) {
       return res
         .status(400)
         .json({ error: "Invalid calendar ID for the provided key" });
@@ -210,41 +246,26 @@ exports.claimReadPermission = async (req, res) => {
       return res.status(403).json({ error: "Permission denied" });
     }
 
-    const existCheck = await pool.query(
-      `SELECT permission
-      FROM calendar_shared_users 
-      WHERE calendar_id = $1 and user_id = $2`,
+    const result = await pool.query(
+      `
+      INSERT INTO calendar_shared_users (calendar_id, user_id, permission) 
+      VALUES ($1, $2, 'read')
+      ON CONFLICT(calendar_id, user_id, permission) DO NOTHING
+      RETURNING calendar_id, user_id, permission
+    `,
       [calendarId, userId]
     );
 
-    let query;
-    let queryParams = [];
-
-    if (existCheck.rowCount === 0) {
-      query = `
-        INSERT INTO calendar_shared_users (calendar_id, user_id, permission) 
-        VALUES ($1, $2, 'read') 
-        RETURNING calendar_id, user_id, permission
-      `;
-    } else {
-      query = `
-        SELECT calendar_id, user_id, permission 
-        FROM calendar_shared_users
-        WHERE calendar_id = $1 and user_id = $2
-      `;
-    }
-    queryParams = [calendarId, userId];
-    const result = await pool.query(query, queryParams);
-
-    res.status(200).json(result.rows[0]);
+    res.status(200).json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
 exports.claimWritePermission = async (req, res) => {
-  const { calendarId, key } = req.query;
+  const { key } = req.query;
   const userId = req.user.id;
+  const { calendarId } = req.params;
   try {
     const keyCheck = await pool.query(
       `SELECT id, write_link_enable 
@@ -256,7 +277,7 @@ exports.claimWritePermission = async (req, res) => {
     if (keyCheck.rowCount === 0) {
       return res.status(404).json({ error: "Calendar not found" });
     }
-    if (keyCheck.rows[0].id.toString() !== calendarId) {
+    if (keyCheck.rows[0].id != calendarId) {
       return res
         .status(400)
         .json({ error: "Invalid calendar ID for the provided key" });
@@ -265,46 +286,23 @@ exports.claimWritePermission = async (req, res) => {
       return res.status(403).json({ error: "Permission denied" });
     }
 
-    const existCheck = await pool.query(
-      `SELECT permission
-      FROM calendar_shared_users 
-      WHERE calendar_id = $1 and user_id = $2`,
+    const result = await pool.query(
+      `
+    INSERT INTO calendar_shared_users (calendar_id, user_id, permission) 
+    VALUES ($1, $2, 'write'), ($1, $2, 'read')
+    ON CONFLICT(calendar_id, user_id, permission) DO NOTHING
+    RETURNING calendar_id, user_id, permission
+  `,
       [calendarId, userId]
     );
 
-    let query;
-    let queryParams = [];
-
-    if (existCheck.rowCount === 0) {
-      query = `
-        INSERT INTO calendar_shared_users (calendar_id, user_id, permission) 
-        VALUES ($1, $2, 'write') 
-        RETURNING calendar_id, user_id, permission
-      `;
-    } else if (existCheck.row[0].permission === "read") {
-      query = `
-      UPDATE calendar_shared_users
-      SET permission = 'write'
-      WHERE calendar_id = $1 and user_id = $2
-      RETURNING calendar_id, user_id, permission
-      `;
-    } else {
-      query = `
-        SELECT calendar_id, user_id, permission 
-        FROM calendar_shared_users
-        WHERE calendar_id = $1 and user_id = $2
-      `;
-    }
-    queryParams = [calendarId, userId];
-    const result = await pool.query(query, queryParams);
-
-    res.status(200).json(result.rows[0]);
+    res.status(200).json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-exports.removePermission = async (req, res) => {
+exports.removeReadPermission = async (req, res) => {
   const { calendarId, removeUserId } = req.params;
   const userId = req.user.id;
   try {
@@ -341,9 +339,53 @@ exports.removePermission = async (req, res) => {
       [calendarId, removeUserId]
     );
 
-    await subscriptionController._unsubscribeCalendar(calendarId, removeUserId);
+    await subscriptionController._unsubscribeCalendar(calendarId, [
+      removeUserId,
+    ]);
 
-    res.status(200).json(result.rows[0]);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.removeWritePermission = async (req, res) => {
+  const { calendarId, removeUserId } = req.params;
+  const userId = req.user.id;
+  try {
+    const ownershipCheck = await pool.query(
+      `SELECT owner_id 
+        FROM calendars 
+        WHERE id = $1`,
+      [calendarId]
+    );
+
+    if (ownershipCheck.rowCount === 0) {
+      return res.status(404).json({ error: "Calendar not found" });
+    }
+    if (ownershipCheck.rows[0].owner_id !== userId) {
+      return res.status(403).json({ error: "Permission denied" });
+    }
+
+    const existCheck = await pool.query(
+      `SELECT 1
+        FROM calendar_shared_users 
+        WHERE calendar_id = $1 and user_id = $2`,
+      [calendarId, userId]
+    );
+
+    if (existCheck.rowCount === 0) {
+      return res.status(404).json({ error: "Permission not found" });
+    }
+
+    const result = await pool.query(
+      `DELETE 
+        FROM calendar_shared_users 
+        WHERE calendar_id = $1 and user_id = $2 and permission = 'write'
+        RETURNING calendar_id, user_id, permission`,
+      [calendarId, removeUserId]
+    );
+    res.status(200).json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

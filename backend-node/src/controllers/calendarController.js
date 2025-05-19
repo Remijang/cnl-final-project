@@ -51,24 +51,22 @@ exports.getSubscribedCalendar = async (req, res) => {
   const userId = req.user.id;
   try {
     const result = await pool.query(
-      `SELECT c.*
-       FROM calendars c
-       WHERE c.owner_id = $1
+      `
+    SELECT * FROM calendars WHERE owner_id = $1
+      
+    UNION
+      
+    SELECT c.*
+    FROM calendars c
+    WHERE c.owner_id = $1
+       
+    UNION
 
-       UNION
-
-       SELECT c.*
-       FROM calendars c
-       JOIN calendar_subscriptions cs ON c.id = cs.calendar_id
-       WHERE cs.user_id = $1
-
-       UNION
-
-       SELECT c.*
-       FROM calendars c
-       JOIN calendar_shared_users csu ON c.id = csu.calendar_id
-       WHERE csu.user_id = $1 AND csu.permission IN ('read', 'write')
-       `,
+    SELECT c.*
+    FROM calendars c
+    JOIN calendar_subscriptions cs ON c.id = cs.calendar_id
+    WHERE cs.user_id = $1
+  `,
       [userId]
     );
 
@@ -81,42 +79,27 @@ exports.getSubscribedCalendar = async (req, res) => {
 exports.getAggregatedCalendar = async (req, res) => {
   const userId = req.user.id;
   try {
-    let query;
-    let queryParams = [];
+    const result = await pool.query(
+      `
+    SELECT * FROM calendars WHERE owner_id = $1
 
-    if (userId) {
-      query = `
-        SELECT * 
-        FROM calendars 
-        WHERE visibility = TRUE
+    UNION
 
-        UNION
-        
-        SELECT c.*
-        FROM calendars c
-        JOIN calendar_shared_users csu ON c.id = csu.calendar_id
-        WHERE csu.user_id = $1 AND csu.permission IN ('read', 'write')
-        ORDER BY created_at DESC;
-      `;
-      queryParams = [userId];
-    } else {
-      query = `
-        SELECT *
-        FROM calendars
-        WHERE visibility = TRUE
-        ORDER BY created_at DESC;
-      `;
-      queryParams = [];
-    }
+    SELECT *
+    FROM calendars 
+    WHERE visibility = TRUE
 
-    const result = await pool.query(query, queryParams);
-    const calendarCount = result.rows.length;
-    const calendars = result.rows;
-
-    res.status(200).json({
-      count: calendarCount,
-      calendars: calendars,
-    });
+    UNION
+    
+    SELECT c.*
+    FROM calendars c
+    JOIN calendar_shared_users csu ON c.id = csu.calendar_id
+    WHERE csu.user_id = $1 AND csu.permission = 'read'
+    ORDER BY created_at DESC;
+  `,
+      [userId]
+    );
+    res.status(200).json(result.rows);
   } catch (err) {
     res
       .status(500)

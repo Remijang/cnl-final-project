@@ -3,7 +3,7 @@ const app = require("../src/app/app");
 const util = require("./utils");
 
 describe("Permission API", () => {
-  let tokenA, tokenB, tokenC;
+  let tokenA, tokenB;
   let calendarAId, calendarBId;
   let res;
   beforeAll(async () => {
@@ -61,6 +61,7 @@ describe("Permission API", () => {
       .post(`/api/permission/${calendarBId}/visibility/on`)
       .set("Authorization", `Bearer ${tokenB}`)
       .expect(200);
+    expect(res.body.visibility).toBe(true);
 
     res = await request(app)
       .get("/api/calendars/aggregated")
@@ -89,9 +90,9 @@ describe("Permission API", () => {
       .expect(200);
     const key = res.body.read_link;
     res = await request(app)
-      .post(`/api/permission/${cid}/read/claim?key=${key}`)
+      .post(`/api/permission/${calendarBId}/read/claim?key=${key}`)
       .set("Authorization", `Bearer ${tokenA}`)
-      .expect(201);
+      .expect(200);
 
     res = await request(app)
       .get("/api/calendars/aggregated")
@@ -103,7 +104,7 @@ describe("Permission API", () => {
       .post("/api/events")
       .set("Authorization", `Bearer ${tokenA}`)
       .send({
-        calendar_id: calendarId,
+        calendar_id: calendarBId,
         title: "New Event 2",
         start_time: new Date().toISOString(),
         end_time: new Date(Date.now() + 3600000).toISOString(),
