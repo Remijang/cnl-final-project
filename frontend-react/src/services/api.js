@@ -23,7 +23,7 @@ export async function apiFetch(endpoint, method = "GET", token = null, data = nu
     config.body = JSON.stringify(data);
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  const response = await fetch(`${API_BASE}/api${endpoint}`, config);
   const result = await response.json();
 
   if (!response.ok) {

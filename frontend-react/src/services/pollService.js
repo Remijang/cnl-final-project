@@ -1,3 +1,5 @@
+import { apiFetch } from "./api";
+
 //Poll API
 export const createPoll = (token, data) => apiFetch("/polls", "POST", token, data);
 export const inviteUserPoll = (token, pollId, data) => apiFetch(`/polls/${pollId}/inviteUser`, "PUT", token, data);

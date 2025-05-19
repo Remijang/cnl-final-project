@@ -1,3 +1,5 @@
+import { apiFetch } from "./api";
+
 //Group API
 export const createGroup = (token, data) => apiFetch("/groups", "POST", token, data);
 export const getAllGroup = (token) => apiFetch("/groups", "GET", token);

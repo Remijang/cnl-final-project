@@ -1,3 +1,5 @@
+import { apiFetch } from "./api";
+
 //Calander API
 export const getUserCalendar = (token) => apiFetch("/calendars/owned", "GET", token);
 export const getAggregatedCalendar = (token) => apiFetch("/calendars/aggregated", "GET", token);

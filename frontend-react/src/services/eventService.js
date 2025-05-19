@@ -1,3 +1,5 @@
+import { apiFetch } from "./api";
+
 //Event API
 export const getEventsByCalendar = (token, calendarId) => apiFetch(`/events/calendar/${calendarId}`, "GET", token);
 export const createEvent = (token, data) => apiFetch("/events", "POST", token, data);
