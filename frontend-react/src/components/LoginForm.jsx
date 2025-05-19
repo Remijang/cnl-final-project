@@ -1,55 +1,39 @@
 import React, { useState } from "react";
+import { login } from "../services/authService";
 
 const LoginForm = ({ setToken }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:3000/api/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        setToken(data.token);
-      } else {
-        alert("Login failed");
-      }
+      const token = await login({ email, password });
+      localStorage.setItem("token", token);
+      setToken(token);
     } catch (err) {
-      console.error(err);
+      console.error("Login failed", err);
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:3000/api/users/google";
-  };
-
   return (
-    <div>
-      <form onSubmit={handleLogin}>
-        <h2>Login</h2>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
-      <button onClick={handleGoogleLogin}>Login with Google</button>
-    </div>
+    <form onSubmit={handleSubmit}>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+        required
+      />
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Password"
+        required
+      />
+      <button type="submit">Login</button>
+    </form>
   );
 };
 

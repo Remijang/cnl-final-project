@@ -1,32 +1,31 @@
 import React, { useState, useEffect } from "react";
+import {
+  createEvent as createEventApi,
+  deleteEvent as deleteEventApi,
+  getEventsByCalendar,
+} from "../services/eventService";
 
-const EventManager = ({ token }) => {
+const EventManager = ({ token, calendarId = 1 }) => {
   const [events, setEvents] = useState([]);
   const [title, setTitle] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
   const fetchEvents = async () => {
-    const res = await fetch("http://localhost:3000/api/events/1", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    setEvents(data);
+    try {
+      const data = await getEventsByCalendar(token, calendarId);
+      setEvents(data);
+    } catch (err) {
+      console.error("Failed to load events", err);
+    }
   };
 
-  const createEvent = async () => {
-    await fetch("http://localhost:3000/api/events", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        calendarId: 1,
-        title,
-        start_time: startTime,
-        end_time: endTime,
-      }),
+  const handleCreateEvent = async () => {
+    await createEventApi(token, {
+      calendarId,
+      title,
+      start_time: startTime,
+      end_time: endTime,
     });
     setTitle("");
     setStartTime("");
@@ -34,17 +33,14 @@ const EventManager = ({ token }) => {
     fetchEvents();
   };
 
-  const deleteEvent = async (eventId) => {
-    await fetch(`http://localhost:3000/api/events/${eventId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  const handleDeleteEvent = async (eventId) => {
+    await deleteEventApi(token, eventId);
     fetchEvents();
   };
 
   useEffect(() => {
-    fetchEvents();
-  }, []);
+    if (token) fetchEvents();
+  }, [token, calendarId]);
 
   return (
     <div>
@@ -65,12 +61,12 @@ const EventManager = ({ token }) => {
         value={endTime}
         onChange={(e) => setEndTime(e.target.value)}
       />
-      <button onClick={createEvent}>Create Event</button>
+      <button onClick={handleCreateEvent}>Create Event</button>
       <ul>
         {events.map((e) => (
           <li key={e.id}>
             <strong>{e.title}</strong> ({e.start_time} → {e.end_time})
-            <button onClick={() => deleteEvent(e.id)}>Delete</button>
+            <button onClick={() => handleDeleteEvent(e.id)}>Delete</button>
           </li>
         ))}
       </ul>

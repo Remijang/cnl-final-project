@@ -1,29 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import CalendarList from "./components/CalendarList";
-import LoginForm from "./components/LoginForm";
 import OAuthRedirect from "./components/OAuthRedirect";
-import EventManager from "./components/EventManager";
+import DashboardPage from "./pages/DashboardPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import { fetchCalendars } from "./services/api";
 
 const App = () => {
+  /*
   const [calendars, setCalendars] = useState([]);
   const [token, setToken] = useState(localStorage.getItem("token") || "");
 
-  const fetchCalendars = () => {
-    fetch("http://localhost:3000/api/calendars/1", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => setCalendars(data))
-      .catch((err) => console.error(err));
-  };
-
   useEffect(() => {
-    if (token) fetchCalendars();
-  }, [token]);
+    const loadCalendars = async () => {
+      try {
+        const data = await fetchCalendars(token);  // ⬅️ 取得資料
+        setCalendars(data);                        // ⬅️ 更新 state
+      } catch (err) {
+        console.error("Failed to load calendars:", err);
+      }
+    };
 
+    if (token) {
+      loadCalendars();
+    }
+  }, [token]);
+  
   return (
     <Router>
       <Routes>
@@ -33,7 +35,7 @@ const App = () => {
             <div>
               <h1>My Calendars</h1>
               {!token ? (
-                <LoginForm setToken={setToken} />
+                <LoginPage setToken={setToken} />
               ) : (
                 <>
                   <CalendarList calendars={calendars} />
@@ -44,6 +46,17 @@ const App = () => {
           }
         />
         <Route path="/oauth" element={<OAuthRedirect setToken={setToken} />} />
+      </Routes>
+    </Router>
+  );
+  */
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/oauth" element={<OAuthRedirect />} />
       </Routes>
     </Router>
   );

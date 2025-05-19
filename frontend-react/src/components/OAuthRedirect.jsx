@@ -19,3 +19,4 @@ const OAuthRedirect = ({ setToken }) => {
 };
 
 export default OAuthRedirect;
+

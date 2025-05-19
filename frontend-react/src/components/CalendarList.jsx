@@ -1,16 +1,18 @@
-import React from "react";
+import React from 'react';
 
-const CalendarList = ({ calendars }) => {
+function CalendarList({ calendars, onSelect }) {
   return (
     <div>
-      {calendars.map((calendar) => (
-        <div key={calendar.id}>
-          <h2>{calendar.title}</h2>
-          <p>Shared: {calendar.shared ? "Yes" : "No"}</p>
-        </div>
-      ))}
+      <h2>My Calendar</h2>
+      <ul>
+        {calendars.map((cal) => (
+          <li key={cal.id} onClick={() => onSelect(cal.id)}>
+            {cal.title} ({cal.shared ? 'Public' : 'Private'})
+          </li>
+        ))}
+      </ul>
     </div>
   );
-};
+}
 
 export default CalendarList;
