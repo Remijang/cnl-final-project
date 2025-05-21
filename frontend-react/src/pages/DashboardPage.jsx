@@ -59,7 +59,7 @@ const DashboardPage = () => {
                   ?.title || `(ID: ${selectedCalendarId})`}
               </h3>
 
-              <EventManager token={token} calendarId={selectedCalendarId} />
+              <EventManager token={token} calendar_id={selectedCalendarId} />
             </>
           )}
         </>

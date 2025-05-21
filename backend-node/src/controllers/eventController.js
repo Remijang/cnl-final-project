@@ -22,7 +22,7 @@ exports.getEventsByCalendar = async (req, res) => {
 };
 
 exports.createEvent = async (req, res) => {
-  const { calendarId, title, start_time, end_time } = req.body;
+  const { calendar_id, title, start_time, end_time } = req.body;
   const userId = req.user.id;
 
   if (!title || !start_time || !end_time) {

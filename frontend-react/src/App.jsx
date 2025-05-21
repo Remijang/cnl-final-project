@@ -14,10 +14,10 @@ import GroupsPage from "./pages/GroupsPage";
 import PollsPage from "./pages/PollsPage";
 
 const CalendarDetailPageWrapper = () => {
-  const { calendarId } = useParams();
+  const { calendar_id } = useParams();
   const token = localStorage.getItem("token");
 
-  return <CalendarDetailPage calendarId={calendarId} token={token} />;
+  return <CalendarDetailPage calendar_id={calendar_id} token={token} />;
 };
 
 const GroupsPageWrapper = () => {
@@ -42,7 +42,7 @@ const App = () => {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/oauth" element={<OAuthRedirect setToken={setToken} />} />
         <Route
-          path="/calendar/:calendarId"
+          path="/calendar/:calendar_id"
           element={<CalendarDetailPageWrapper />}
         />
         <Route path="/group" element={<GroupsPageWrapper />} />

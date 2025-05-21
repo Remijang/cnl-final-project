@@ -1,7 +1,7 @@
 import { apiFetch } from "./api";
 
 //Subscription API
-export const subscribeCalendar = (token, calendarId) =>
-  apiFetch(`/subscriptions/${calendarId}/subscribe`, "POST", token);
-export const unsubscribeCalendar = (token, calendarId) =>
-  apiFetch(`/subscriptions/${calendarId}/unsubscribe`, "POST", token);
+export const subscribeCalendar = (token, calendar_id) =>
+  apiFetch(`/subscriptions/${calendar_id}/subscribe`, "POST", token);
+export const unsubscribeCalendar = (token, calendar_id) =>
+  apiFetch(`/subscriptions/${calendar_id}/unsubscribe`, "POST", token);

@@ -5,7 +5,7 @@ import {
   getEventsByCalendar,
 } from "../services/eventService";
 
-const EventManager = ({ token, calendarId = 1 }) => {
+const EventManager = ({ token, calendar_id = 1 }) => {
   const [events, setEvents] = useState([]);
   const [title, setTitle] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -13,7 +13,7 @@ const EventManager = ({ token, calendarId = 1 }) => {
 
   const fetchEvents = async () => {
     try {
-      const data = await getEventsByCalendar(token, calendarId);
+      const data = await getEventsByCalendar(token, calendar_id);
       setEvents(data);
     } catch (err) {
       console.error("Failed to load events", err);
@@ -22,8 +22,8 @@ const EventManager = ({ token, calendarId = 1 }) => {
 
   const handleCreateEvent = async () => {
     await createEvent(token, {
-      calendarId,
-      title,
+      calendar_id: calendar_id,
+      title: title,
       start_time: startTime,
       end_time: endTime,
     });
@@ -40,7 +40,7 @@ const EventManager = ({ token, calendarId = 1 }) => {
 
   useEffect(() => {
     if (token) fetchEvents();
-  }, [token, calendarId]);
+  }, [token, calendar_id]);
 
   return (
     <div>

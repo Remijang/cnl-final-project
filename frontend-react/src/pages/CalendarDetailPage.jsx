@@ -1,11 +1,11 @@
 import React from "react";
 import EventManager from "../components/EventManager";
 
-const CalendarDetailPage = ({ token, calendarId }) => {
+const CalendarDetailPage = ({ token, calendar_id }) => {
   return (
     <div>
       <h2>Calendar Detail</h2>
-      <EventManager token={token} calendarId={calendarId} />
+      <EventManager token={token} calendar_id={calendar_id} />
     </div>
   );
 };
