@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchCalendars } from "../services/api";
+import { getUserCalendar } from "../services/calendarService";
 import CalendarList from "../components/CalendarList";
 import EventManager from "../components/EventManager";
 import LoginForm from "../components/LoginForm";
@@ -11,7 +11,7 @@ const DashboardPage = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await fetchCalendars(token);
+        const data = await getUserCalendar(token);
         setCalendars(data);
       } catch (err) {
         console.error(err);
