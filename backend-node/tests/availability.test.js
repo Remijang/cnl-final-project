@@ -59,7 +59,7 @@ describe("Group API", () => {
     groupId = res.body.id;
 
     await request(app)
-      .post(`/api/groups/${groupId}/add`)
+      .post(`/api/groups/${groupId}/user`)
       .set("Authorization", `Bearer ${tokenA}`)
       .send({ addUserId: idB });
   });

@@ -47,7 +47,7 @@ describe("Auth API", () => {
       .post("/api/auth/login")
       .send({ email: "test@example.com", password: "test456" });
     expect(res.statusCode).toBe(401);
-    expect(res.body.message).toBe("Invalid credentials");
+    expect(res.body.error).toBe("Invalid credentials");
   });
 
   it("should not access with non-existed users", async () => {
@@ -55,6 +55,6 @@ describe("Auth API", () => {
       .post("/api/auth/login")
       .send({ email: "alice@example.com", password: "test456" });
     expect(res.statusCode).toBe(401);
-    expect(res.body.message).toBe("Invalid credentials");
+    expect(res.body.error).toBe("Invalid credentials");
   });
 });

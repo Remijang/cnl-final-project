@@ -11,7 +11,7 @@ exports.register = async (req, res) => {
       [email]
     );
     if (result_email.rows.length > 0) {
-      return res.status(500).json({ message: "Email has already been used" });
+      return res.status(500).json({ error: "Email has already been used" });
     }
     // check if username is used
     const result_name = await pool.query(
@@ -21,7 +21,7 @@ exports.register = async (req, res) => {
     if (result_name.rows.length > 0) {
       return res
         .status(500)
-        .json({ message: "This username has already been used" });
+        .json({ error: "This username has already been used" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUserResult = await pool.query(
@@ -64,7 +64,7 @@ exports.login = async (req, res) => {
 
       res.status(200).json({ token });
     } else {
-      res.status(401).json({ message: "Invalid credentials" });
+      res.status(401).json({ error: "Invalid credentials" });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -72,25 +72,11 @@ exports.login = async (req, res) => {
 };
 
 exports.logout = async (req, res) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-
-  if (!token) {
-    return res.sendStatus(204); // No content, as there's no token to invalidate
-  }
-
+  const userId = req.user.id;
   try {
-    const result = await pool.query(
-      "UPDATE user_tokens SET is_revoked = TRUE WHERE token = $1",
-      [token]
-    );
+    await pool.query("DELETE FROM user_tokens WHERE user_id = $1", [userId]);
 
-    if (result.rowCount > 0) {
-      res.status(200).json({ message: "Logged out successfully" });
-    } else {
-      // Token might not be found in our database, but client-side should still clear it
-      res.status(200).json({ message: "Logged out successfully" });
-    }
+    res.status(200).json({ message: "Logged out successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

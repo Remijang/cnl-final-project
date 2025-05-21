@@ -72,7 +72,7 @@ describe("Group API", () => {
   it("should add the user to the group and get the group members", async () => {
     let res;
     res = await request(app)
-      .post(`/api/groups/${groupId}/add`)
+      .post(`/api/groups/${groupId}/user`)
       .set("Authorization", `Bearer ${tokenA}`)
       .send({ addUserId: idB })
       .expect(200);
@@ -92,13 +92,13 @@ describe("Group API", () => {
     let res;
     res = await request(app).post("/api/groups").expect(401);
     res = await request(app)
-      .post(`/api/groups/${groupId}/add`)
+      .post(`/api/groups/${groupId}/user`)
       .send({ addUserId: idB })
       .expect(401);
 
     res = await request(app)
-      .post(`/api/groups/${groupId}/remove`)
-      .send({ addUserId: idB })
+      .delete(`/api/groups/${groupId}/user`)
+      .send({ removeUserId: idB })
       .expect(401);
 
     res = await request(app).get(`/api/groups/${groupId}`).expect(401);
@@ -108,13 +108,13 @@ describe("Group API", () => {
   it("should reject if the permission is wrong", async () => {
     let res;
     res = await request(app)
-      .post(`/api/groups/${groupId}/add`)
+      .post(`/api/groups/${groupId}/user`)
       .set("Authorization", `Bearer ${tokenB}`)
       .send({ addUserId: idB })
       .expect(403);
 
     res = await request(app)
-      .post(`/api/groups/${groupId}/remove`)
+      .delete(`/api/groups/${groupId}/user`)
       .set("Authorization", `Bearer ${tokenB}`)
       .send({ addUserId: idB })
       .expect(403);
@@ -125,7 +125,7 @@ describe("Group API", () => {
       .expect(403);
 
     res = await request(app)
-      .post(`/api/groups/${groupId}/add`)
+      .post(`/api/groups/${groupId}/user`)
       .set("Authorization", `Bearer ${tokenA}`)
       .send({ addUserId: idB })
       .expect(200);
@@ -144,7 +144,7 @@ describe("Group API", () => {
 
   it("should remove the user from the group", async () => {
     let res = await request(app)
-      .post(`/api/groups/${groupId}/remove`)
+      .delete(`/api/groups/${groupId}/user`)
       .set("Authorization", `Bearer ${tokenA}`)
       .send({ addUserId: idB })
       .expect(200);
@@ -159,7 +159,7 @@ describe("Group API", () => {
 
     // should denied removing the owner
     res = await request(app)
-      .post(`/api/groups/${groupId}/remove`)
+      .delete(`/api/groups/${groupId}/user`)
       .set("Authorization", `Bearer ${tokenA}`)
       .send({ addUserId: idA })
       .expect(200);

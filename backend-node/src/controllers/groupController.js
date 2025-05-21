@@ -64,7 +64,7 @@ exports.addGroupUser = async (req, res) => {
 // Remove a user from a group (only owner can remove)
 exports.removeGroupUser = async (req, res) => {
   const { groupId } = req.params;
-  const { addUserId } = req.body;
+  const { removeUserId } = req.body;
   const userId = req.user.id;
   try {
     // Check ownership
@@ -78,7 +78,7 @@ exports.removeGroupUser = async (req, res) => {
     // Remove member
     await pool.query(
       "DELETE FROM group_members WHERE group_id = $1 AND user_id = $2",
-      [groupId, addUserId]
+      [groupId, removeUserId]
     );
     res.status(200).json({ message: "User removed from group" });
   } catch (err) {

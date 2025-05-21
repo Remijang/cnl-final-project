@@ -17,12 +17,12 @@ router.post(
   permissionController.claimWritePermission
 );
 router.delete(
-  "/:calendarId/remove/read/:removeUserId",
+  "/:calendarId/read/:removeUserId",
   permissionController.removeReadPermission
 );
 
 router.delete(
-  "/:calendarId/remove/write/:removeUserId",
+  "/:calendarId/write/:removeUserId",
   permissionController.removeWritePermission
 );
 

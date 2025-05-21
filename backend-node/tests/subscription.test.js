@@ -20,7 +20,7 @@ let visibilityOff = async function (calendarId, token) {
 
 let subscribe = async function (calendarId, token) {
   res = await request(app)
-    .post(`/api/subscriptions/${calendarId}/subscribe`)
+    .post(`/api/subscriptions/${calendarId}`)
     .set("Authorization", `Bearer ${token}`)
     .expect(200);
 };
@@ -97,7 +97,7 @@ describe("Subscription API", () => {
 
   it("should return 409 if already subscribed", async () => {
     await request(app)
-      .post(`/api/subscriptions/${calendarbId}/subscribe`)
+      .post(`/api/subscriptions/${calendarbId}`)
       .set("Authorization", `Bearer ${tokena}`)
       .expect(409);
   });
@@ -106,7 +106,7 @@ describe("Subscription API", () => {
     let res;
 
     res = await request(app)
-      .post(`/api/subscriptions/${calendarbId}/unsubscribe`)
+      .delete(`/api/subscriptions/${calendarbId}`)
       .set("Authorization", `Bearer ${tokena}`)
       .expect(200);
 
