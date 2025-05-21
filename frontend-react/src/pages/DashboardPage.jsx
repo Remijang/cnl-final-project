@@ -30,9 +30,9 @@ const DashboardPage = () => {
 
   const handleCreateCalendar = async ({ title, shared }) => {
     try {
-      const newCalendar = await createCalendar(token, {title});
+      const newCalendar = await createCalendar(token, { title });
       if (shared) {
-        console.log("new calender id: ", newCalendar.id)
+        console.log("new calender id: ", newCalendar.id);
         await toggleVisibility(token, newCalendar.id, true); // ⬅️ 透過 API 開啟公開權限
       }
       await loadCalendars(); // 更新列表
@@ -55,10 +55,8 @@ const DashboardPage = () => {
             <>
               <h3>
                 Events in Calendar:{" "}
-                {
-                  calendars.find((cal) => cal.id === selectedCalendarId)?.title ||
-                  `(ID: ${selectedCalendarId})`
-                }
+                {calendars.find((cal) => cal.id === selectedCalendarId)
+                  ?.title || `(ID: ${selectedCalendarId})`}
               </h3>
 
               <EventManager token={token} calendarId={selectedCalendarId} />
