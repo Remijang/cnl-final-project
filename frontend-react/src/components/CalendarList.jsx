@@ -7,7 +7,7 @@ function CalendarList({ calendars, onSelect }) {
       <ul>
         {calendars.map((cal) => (
           <li key={cal.id} onClick={() => onSelect(cal.id)}>
-            {cal.title} ({cal.shared ? 'Public' : 'Private'})
+            {cal.title} ({cal.visibility ? 'Public' : 'Private'})
           </li>
         ))}
       </ul>

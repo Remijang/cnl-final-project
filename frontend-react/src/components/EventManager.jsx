@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
-  createEvent as createEventApi,
-  deleteEvent as deleteEventApi,
+  createEvent,
+  deleteEvent,
   getEventsByCalendar,
 } from "../services/eventService";
 
@@ -21,7 +21,7 @@ const EventManager = ({ token, calendarId = 1 }) => {
   };
 
   const handleCreateEvent = async () => {
-    await createEventApi(token, {
+    await createEvent(token, {
       calendarId,
       title,
       start_time: startTime,
@@ -34,7 +34,7 @@ const EventManager = ({ token, calendarId = 1 }) => {
   };
 
   const handleDeleteEvent = async (eventId) => {
-    await deleteEventApi(token, eventId);
+    await deleteEvent(token, eventId);
     fetchEvents();
   };
 
