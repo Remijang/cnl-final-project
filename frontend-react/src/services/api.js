@@ -7,7 +7,12 @@ const API_BASE = process.env.REACT_APP_API_URL;
   return res.json();
 }*/
 
-export async function apiFetch(endpoint, method = "GET", token = null, data = null) {
+export async function apiFetch(
+  endpoint,
+  method = "GET",
+  token = null,
+  data = null
+) {
   const config = {
     method,
     headers: {
