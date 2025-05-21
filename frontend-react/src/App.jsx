@@ -6,7 +6,8 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import { fetchCalendars } from "./services/api";
 import CalendarDetailPage from "./pages/CalendarDetailPage";
-import GroupsPage from "./pages/GroupsPage";
+import GroupsPage from "./pages/GroupsPage"
+import PollsPage from "./pages/PollsPage";
 
 
 const CalendarDetailPageWrapper = () => {
