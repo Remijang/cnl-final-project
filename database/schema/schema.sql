@@ -1,7 +1,7 @@
 --------- user -----------
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255),
+    name VARCHAR(255) UNIQUE NOT NULL,
     email TEXT UNIQUE,
     hashed_password TEXT,
     google_id VARCHAR(255) UNIQUE,

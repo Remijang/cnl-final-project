@@ -8,5 +8,6 @@ router.get("/subscribed", calendarController.getSubscribedCalendar);
 router.get("/aggregated", calendarController.getAggregatedCalendar);
 router.put("/:calendarId", calendarController.updateCalendar);
 router.delete("/:calendarId", calendarController.deleteCalendar);
+router.get("/user", calendarController.getVisibleCalendarByUsername);
 
 module.exports = router;

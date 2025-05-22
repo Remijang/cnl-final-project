@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const permissionController = require("./permissionController");
+const userController = require("./userController");
 
 function createRandomString(length) {
   const chars =
@@ -40,6 +41,37 @@ exports.getUserCalendar = async (req, res) => {
       `SELECT * FROM calendars WHERE owner_id = $1`,
       [ownerId]
     );
+
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getVisibleCalendarByUsername = async (req, res) => {
+  const { name } = req.query;
+
+  try {
+    id = userController.getIdByName(name);
+    const result = await pool.query(
+      `SELECT *
+        FROM calendars 
+        WHERE visibility = TRUE AND owner_id = $1
+    
+        UNION
+        
+        SELECT c.*
+        FROM calendars c
+        JOIN calendar_shared_users csu ON c.id = csu.calendar_id
+        WHERE csu.user_id = $1 AND csu.permission = 'read'
+        ORDER BY created_at DESC;
+    `,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Calendar not found" });
+    }
 
     res.json(result.rows);
   } catch (err) {

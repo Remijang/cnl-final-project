@@ -4,7 +4,7 @@ exports.getProfile = async (req, res) => {
   try {
     const userId = req.user.id; // User ID is now available in req.user from the middleware
     const result = await pool.query(
-      "SELECT id, name, email, avatar_url, bio, created_at, updated_at FROM users WHERE id = $1",
+      `SELECT id, name, email, avatar_url, bio, created_at, updated_at FROM users WHERE id = $1`,
       [userId]
     );
 
@@ -25,7 +25,16 @@ exports.updateProfile = async (req, res) => {
 
   try {
     const result = await pool.query(
-      "UPDATE users SET name = $1, bio = $2, avatar_url = $3, updated_at = NOW() WHERE id = $4 RETURNING id, name, email, avatar_url, bio, created_at, updated_at",
+      `UPDATE users 
+      SET name = $1, bio = $2, avatar_url = $3, updated_at = NOW() 
+      WHERE id = $4 
+        AND NOT EXISTS (
+            SELECT 1 FROM users
+            WHERE name = $1
+            AND id != $4
+        )
+      RETURNING id, name, email, avatar_url, bio, created_at, updated_at
+    `,
       [name, bio, avatar_url, userId]
     );
 
@@ -37,5 +46,39 @@ exports.updateProfile = async (req, res) => {
   } catch (err) {
     console.error("Error updating profile:", err);
     res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getUserIdByName = async (req, res) => {
+  const { name } = req.body;
+
+  try {
+    const id = await this.getIdByName(name);
+
+    if (id) {
+      res.status(200).json({ id });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getIdByName = async (name) => {
+  try {
+    const result = await pool.query(`SELECT id FROM users WHERE name = $1`, [
+      name,
+    ]);
+
+    if (result.rows.length === 1) {
+      return result.rows[0].id;
+    } else {
+      return null; // User not found
+    }
+  } catch (err) {
+    console.error("Error fetching user ID by name:", err);
+    throw err; // Rethrow the error for higher-level handling
   }
 };
