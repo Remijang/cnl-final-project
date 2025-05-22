@@ -1,4 +1,56 @@
 const pool = require("../config/db");
+const votePoll = async (req, res) => {
+  const { pollId } = req.params;
+  const userId = req.user.id;
+  const { votes } = req.body;
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const pollCheck = await client.query("SELECT id FROM polls WHERE id = $1", [
+      pollId,
+    ]);
+    if (pollCheck.rowCount === 0) {
+      return res.status(404).json({ error: "Poll not found" });
+    }
+
+    const timeRangeIds = votes.map((v) => v.time_range_id);
+    const timeRangeCheck = await client.query(
+      `SELECT id FROM poll_time_ranges WHERE poll_id = $1 AND id = ANY($2::int[])`,
+      [pollId, timeRangeIds]
+    );
+
+    if (timeRangeCheck.rowCount !== timeRangeIds.length) {
+      return res
+        .status(400)
+        .json({ error: "One or more time ranges are invalid for this poll" });
+    }
+
+    const voteResults = [];
+
+    for (const vote of votes) {
+      const result = await client.query(
+        `INSERT INTO poll_votes (poll_id, time_range_id, user_id, is_available)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (poll_id, time_range_id, user_id)
+           DO UPDATE SET is_available = EXCLUDED.is_available, voted_at = NOW()
+           RETURNING *`,
+        [pollId, vote.time_range_id, userId, vote.is_available]
+      );
+      voteResults.push(result.rows[0]);
+    }
+
+    await client.query("COMMIT");
+    res.status(201).json({ votes: voteResults });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
 
 exports.createPoll = async (req, res) => {
   const { title, description, time_ranges } = req.body;
@@ -20,17 +72,22 @@ exports.createPoll = async (req, res) => {
 
     const pollId = pollResult.rows[0].id;
 
+    const time_range_results = [];
     for (const range of time_ranges) {
-      await client.query(
+      const time_range_result = await client.query(
         `INSERT INTO poll_time_ranges (poll_id, start_time, end_time)
-         VALUES ($1, $2, $3)`,
+         VALUES ($1, $2, $3)
+         RETURNING id, start_time, end_time`,
         [pollId, range.start_time, range.end_time]
       );
+      time_range_results.push(time_range_result.rows[0]);
     }
 
     await client.query("COMMIT");
 
-    res.status(201).json(pollResult.rows[0]);
+    res
+      .status(201)
+      .json({ poll: pollResult.rows[0], time_ranges: time_range_results });
   } catch (err) {
     await client.query("ROLLBACK");
     res.status(500).json({ error: err.message });
@@ -139,7 +196,7 @@ exports.inviteGroupPoll = async (req, res) => {
   }
 };
 
-exports.listPoll = async (req, res) => {
+exports.listPoll = async (_, res) => {
   try {
     // Should list polls that already confirmed?
     const result = await pool.query(
@@ -155,9 +212,10 @@ exports.checkPoll = async (req, res) => {
   const { pollId } = req.params;
 
   try {
-    const pollResult = await pool.query(`SELECT * FROM polls WHERE id = $1`, [
-      pollId,
-    ]);
+    const pollResult = await pool.query(
+      `SELECT * FROM polls WHERE id = $1 AND is_cancelled = FALSE`,
+      [pollId]
+    );
 
     if (pollResult.rowCount === 0)
       return res.status(404).json({ error: "Poll not found" });
@@ -182,63 +240,9 @@ exports.checkPoll = async (req, res) => {
   }
 };
 
-exports.votePoll = async (req, res) => {
-  const { pollId } = req.params;
-  const userId = req.user.id;
-  const { votes } = req.body;
+exports.votePoll = votePoll;
 
-  const client = await pool.connect();
-
-  try {
-    await client.query("BEGIN");
-
-    const pollCheck = await client.query("SELECT id FROM polls WHERE id = $1", [
-      pollId,
-    ]);
-    if (pollCheck.rowCount === 0) {
-      return res.status(404).json({ error: "Poll not found" });
-    }
-
-    const timeRangeIds = votes.map((v) => v.time_range_id);
-    const timeRangeCheck = await client.query(
-      `SELECT id FROM poll_time_ranges WHERE poll_id = $1 AND id = ANY($2::int[])`,
-      [pollId, timeRangeIds]
-    );
-
-    if (timeRangeCheck.rowCount !== timeRangeIds.length) {
-      return res
-        .status(400)
-        .json({ error: "One or more time ranges are invalid for this poll" });
-    }
-
-    const voteResults = [];
-
-    for (const vote of votes) {
-      const result = await client.query(
-        `INSERT INTO poll_votes (poll_id, time_range_id, user_id, is_available)
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (poll_id, time_range_id, user_id)
-         DO UPDATE SET is_available = EXCLUDED.is_available, voted_at = NOW()
-         RETURNING *`,
-        [pollId, vote.time_range_id, userId, vote.is_available]
-      );
-      voteResults.push(result.rows[0]);
-    }
-
-    await client.query("COMMIT");
-    res.status(201).json({ votes: voteResults });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    res.status(500).json({ error: err.message });
-  } finally {
-    client.release();
-  }
-};
-
-exports.updatePoll = async (req, res) => {
-  // Can be implemented through votePoll by using conflict?
-  return exports.votePoll(req, res);
-};
+exports.updatePoll = votePoll;
 
 exports.getUserPoll = async (req, res) => {
   const { pollId, userId } = req.params;

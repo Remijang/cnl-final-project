@@ -3,46 +3,34 @@ const app = require("../src/app/app");
 const util = require("./utils");
 
 describe("Polls API", () => {
-  let tokenA, tokenB;
-  let userAId, userBId;
+  let tokenA, tokenB, tokenC;
+  let idA, idB, idC;
   let pollId;
   let groupId;
   let timeRange1Id, timeRange2Id;
 
   beforeAll(async () => {
     await util.databaseCleanup();
-    let res = await request(app)
-      .post("/api/auth/register")
-      .send({ name: "a", email: "a@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(201);
-    userAId = res.body.userId;
+    ({ id: idA, token: tokenA } = await util.registerAndLogin(
+      "a",
+      "a@example.com",
+      "passwordA"
+    ));
 
-    res = await request(app)
-      .post("/api/auth/login")
-      .send({ email: "a@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(200);
-    expect(res.body.token).toBeDefined();
-    tokenA = res.body.token;
+    ({ id: idB, token: tokenB } = await util.registerAndLogin(
+      "b",
+      "b@example.com",
+      "passwordB"
+    ));
 
-    res = await request(app)
-      .post("/api/auth/register")
-      .send({ name: "b", email: "b@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(201);
-    userBId = res.body.userId;
+    ({ id: idC, token: tokenC } = await util.registerAndLogin(
+      "c",
+      "c@example.com",
+      "passwordC"
+    ));
 
-    res = await request(app)
-      .post("/api/auth/login")
-      .send({ email: "b@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(200);
-    expect(res.body.token).toBeDefined();
-    tokenB = res.body.token;
-
-    res = await request(app)
-      .post("/api/groups")
-      .set("Authorization", `Bearer ${tokenA}`)
-      .send({ name: "My Test Group" })
-      .expect(201);
-    groupId = res.body.id;
+    groupId = await util.createGroup(tokenA, "availability test");
+    await util.addGroupUser(tokenA, groupId, idC);
 
     // Create a poll
     const createPollRes = await request(app)
@@ -63,8 +51,8 @@ describe("Polls API", () => {
         ],
       });
     expect(createPollRes.statusCode).toBe(201);
-    expect(createPollRes.body.pollId).toBeDefined();
-    pollId = createPollRes.body.pollId;
+    expect(createPollRes.body.poll.id).toBeDefined();
+    pollId = createPollRes.body.poll.id;
     timeRange1Id = createPollRes.body.time_ranges[0].id;
     timeRange2Id = createPollRes.body.time_ranges[1].id;
   });
@@ -84,28 +72,26 @@ describe("Polls API", () => {
         ],
       });
     expect(res.statusCode).toBe(201);
-    expect(res.body.pollId).toBeDefined();
-    expect(res.body.title).toBe("New Poll");
+    expect(res.body.poll.id).toBeDefined();
+    expect(res.body.poll.title).toBe("New Poll");
   });
 
   it("should invite a user to a poll (PUT /polls/:pollId/inviteUser)", async () => {
     const res = await request(app)
       .put(`/api/polls/${pollId}/inviteUser`)
       .set("Authorization", `Bearer ${tokenA}`)
-      .send({ userId: userBId });
-    expect(res.statusCode).toBe(200);
-    expect(res.body.message).toBeDefined(); // Or check for specific success message
+      .send({ userId: idB });
+    expect(res.statusCode).toBe(201);
   });
 
   it("should invite a group of users to a poll (PUT /polls/:pollId/inviteGroupPoll)", async () => {
     // Assuming you have a way to identify groups and a corresponding API to get user IDs in a group
     // For this test, we'll just send an array of user IDs directly
     const res = await request(app)
-      .put(`/api/polls/${pollId}/inviteGroupPoll`)
+      .put(`/api/polls/${pollId}/inviteGroup`)
       .set("Authorization", `Bearer ${tokenA}`)
       .send({ groupId: groupId });
-    expect(res.statusCode).toBe(200);
-    expect(res.body.message).toBeDefined(); // Or check for specific success message
+    expect(res.statusCode).toBe(201);
   });
 
   it("should list ongoing polls (GET /polls/listPoll)", async () => {
@@ -122,67 +108,53 @@ describe("Polls API", () => {
       .get(`/api/polls/${pollId}`)
       .set("Authorization", `Bearer ${tokenA}`);
     expect(res.statusCode).toBe(200);
-    expect(res.body.id).toBe(pollId);
-    expect(res.body.title).toBe("Test Poll");
-    expect(res.body.timeRanges).toBeDefined();
-    expect(res.body.timeRanges.length).toBe(2);
-    expect(res.body.votes).toBeDefined(); // Check if votes/statistics are present
+    expect(res.body.poll).toBeDefined();
+    expect(res.body.poll.id).toBe(pollId);
+    expect(res.body.poll.title).toBe("Test Poll");
+    expect(res.body.time_ranges).toBeDefined();
+    expect(res.body.time_ranges.length).toBe(2);
   });
 
   it("should submit a vote to a poll (POST /polls/:pollId)", async () => {
     const res = await request(app)
       .post(`/api/polls/${pollId}`)
       .set("Authorization", `Bearer ${tokenB}`)
-      .send({ votes: [timeRange1Id] });
-    expect(res.statusCode).toBe(200);
-    expect(res.body.message).toBeDefined(); // Or check for specific success message
+      .send({ votes: [{ time_range_id: timeRange1Id, is_available: true }] });
+    expect(res.statusCode).toBe(201);
   });
 
   it("should update a user's vote in a poll (PUT /polls/:pollId)", async () => {
-    // First, submit a vote
-    await request(app)
-      .post(`/api/polls/${pollId}`)
-      .set("Authorization", `Bearer ${tokenB}`)
-      .send({ votes: [timeRange1Id] });
-
-    // Then, update the vote
+    // update the vote
     const res = await request(app)
       .put(`/api/polls/${pollId}`)
       .set("Authorization", `Bearer ${tokenB}`)
-      .send({ votes: [timeRange2Id] });
-    expect(res.statusCode).toBe(200);
-    expect(res.body.message).toBeDefined(); // Or check for specific success message
+      .send({
+        votes: [
+          { time_range_id: timeRange1Id, is_available: false },
+          { time_range_id: timeRange2Id, is_available: true },
+        ],
+      });
+    expect(res.statusCode).toBe(201);
   });
 
   it("should get a specific user's vote in a poll (GET /polls/:pollId/:userId)", async () => {
-    // First, invite user b to the poll
-    await request(app)
-      .put(`/api/polls/${pollId}/inviteUser`)
-      .set("Authorization", `Bearer ${tokenA}`)
-      .send({ userId: userBId });
-
-    // Then, submit a vote for user b
-    await request(app)
-      .post(`/api/polls/${pollId}`)
-      .set("Authorization", `Bearer ${tokenB}`)
-      .send({ availability: [timeRange1Id] });
-
     const res = await request(app)
-      .get(`/api/polls/${pollId}/${userBId}`)
+      .get(`/api/polls/${pollId}/${idB}`)
       .set("Authorization", `Bearer ${tokenA}`); // Owner can view
     expect(res.statusCode).toBe(200);
-    expect(res.body.userId).toBe(userBId);
-    expect(res.body.availability).toEqual([timeRange1Id]);
+    expect(res.body[0].time_range_id).toBe(timeRange1Id);
+    expect(res.body[0].is_available).toBe(false);
+    expect(res.body[1].time_range_id).toBe(timeRange2Id);
+    expect(res.body[1].is_available).toBe(true);
   });
 
   it("should confirm a poll and create an event (POST /polls/:pollId/confirm)", async () => {
     const res = await request(app)
       .post(`/api/polls/${pollId}/confirm`)
       .set("Authorization", `Bearer ${tokenA}`)
-      .send({ confirmedTimeRangeId: timeRange1Id });
-    expect(res.statusCode).toBe(201);
-    expect(res.body.eventId).toBeDefined();
-    expect(res.body.confirmedTimeRangeId).toBe(timeRange1Id);
+      .send({ confirmed_time_range_id: timeRange1Id });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.confirmed_time_range_id).toBe(timeRange1Id);
   });
 
   it("should cancel a poll (DELETE /polls/:pollId)", async () => {
@@ -190,7 +162,6 @@ describe("Polls API", () => {
       .delete(`/api/polls/${pollId}`)
       .set("Authorization", `Bearer ${tokenA}`);
     expect(res.statusCode).toBe(200);
-    expect(res.body.message).toBeDefined(); // Or check for specific success message
 
     // Verify that the poll is indeed cancelled
     const checkRes = await request(app)

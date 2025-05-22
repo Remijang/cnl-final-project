@@ -1,5 +1,17 @@
 const pool = require("../config/db");
 
+const _getIdByName = async (name) => {
+  const result = await pool.query(`SELECT id FROM users WHERE name = $1`, [
+    name,
+  ]);
+
+  if (result.rows.length === 1) {
+    return result.rows[0].id;
+  } else {
+    return null;
+  }
+};
+
 exports.getProfile = async (req, res) => {
   try {
     const userId = req.user.id; // User ID is now available in req.user from the middleware
@@ -53,7 +65,7 @@ exports.getUserIdByName = async (req, res) => {
   const { name } = req.body;
 
   try {
-    const id = await this.getIdByName(name);
+    const id = await _getIdByName(name);
 
     if (id) {
       res.status(200).json({ id });
@@ -66,19 +78,4 @@ exports.getUserIdByName = async (req, res) => {
   }
 };
 
-exports.getIdByName = async (name) => {
-  try {
-    const result = await pool.query(`SELECT id FROM users WHERE name = $1`, [
-      name,
-    ]);
-
-    if (result.rows.length === 1) {
-      return result.rows[0].id;
-    } else {
-      return null; // User not found
-    }
-  } catch (err) {
-    console.error("Error fetching user ID by name:", err);
-    throw err; // Rethrow the error for higher-level handling
-  }
-};
+exports._getIdByName = _getIdByName;

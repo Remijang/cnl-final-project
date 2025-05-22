@@ -29,9 +29,7 @@ exports.register = async (req, res) => {
       [name, email, hashedPassword]
     );
     const newUser = newUserResult.rows[0];
-    res
-      .status(201)
-      .json({ message: "User registered successfully", user: newUser });
+    res.status(201).json(newUser);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

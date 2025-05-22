@@ -3,65 +3,33 @@ const app = require("../src/app/app");
 const util = require("./utils");
 const jwt = require("jsonwebtoken");
 
-describe("Group API", () => {
+describe("Availability API", () => {
   const today = new Date().toISOString().split("T")[0];
   let tokenA, tokenB, tokenC, groupId;
   let idA, idB, idC;
   beforeAll(async () => {
     let res;
     await util.databaseCleanup();
-    res = await request(app)
-      .post("/api/auth/register")
-      .send({ name: "a", email: "a@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(201);
+    ({ id: idA, token: tokenA } = await util.registerAndLogin(
+      "a",
+      "a@example.com",
+      "passwordA"
+    ));
 
-    res = await request(app)
-      .post("/api/auth/login")
-      .send({ email: "a@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(200);
-    expect(res.body.token).toBeDefined();
-    tokenA = res.body.token;
-    idA = jwt.verify(tokenA, process.env.JWT_SECRET).id;
+    ({ id: idB, token: tokenB } = await util.registerAndLogin(
+      "b",
+      "b@example.com",
+      "passwordB"
+    ));
 
-    res = await request(app)
-      .post("/api/auth/register")
-      .send({ name: "b", email: "b@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(201);
+    ({ id: idC, token: tokenC } = await util.registerAndLogin(
+      "c",
+      "c@example.com",
+      "passwordC"
+    ));
 
-    res = await request(app)
-      .post("/api/auth/login")
-      .send({ email: "b@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(200);
-    expect(res.body.token).toBeDefined();
-    tokenB = res.body.token;
-    idB = jwt.verify(tokenB, process.env.JWT_SECRET).id;
-
-    res = await request(app)
-      .post("/api/auth/register")
-      .send({ name: "c", email: "c@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(201);
-
-    res = await request(app)
-      .post("/api/auth/login")
-      .send({ email: "c@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(200);
-    expect(res.body.token).toBeDefined();
-    tokenC = res.body.token;
-    idC = jwt.verify(tokenC, process.env.JWT_SECRET).id;
-
-    res = await request(app)
-      .post("/api/groups")
-      .set("Authorization", `Bearer ${tokenA}`)
-      .send({ name: "My Test Group" })
-      .expect(201);
-
-    expect(res.body).toHaveProperty("id");
-    groupId = res.body.id;
-
-    await request(app)
-      .post(`/api/groups/${groupId}/user`)
-      .set("Authorization", `Bearer ${tokenA}`)
-      .send({ addUserId: idB });
+    groupId = await util.createGroup(tokenA, "availability test");
+    await util.addGroupUser(tokenA, groupId, idB);
   });
 
   it("should set availability for User A", async () => {
@@ -77,6 +45,7 @@ describe("Group API", () => {
       .expect(201);
   });
   it("should set availability for User B", async () => {
+    let res;
     res = await request(app)
       .post("/api/availability")
       .set("Authorization", `Bearer ${tokenB}`)
@@ -89,6 +58,7 @@ describe("Group API", () => {
   });
 
   it("should get group availability", async () => {
+    let res;
     res = await request(app)
       .get(`/api/availability/groups/${groupId}?day=${today}`)
       .set("Authorization", `Bearer ${tokenA}`)
@@ -105,6 +75,7 @@ describe("Group API", () => {
   });
 
   it("should get reject unauthenticated user and wrong permission", async () => {
+    let res;
     res = await request(app)
       .get(`/api/availability/groups/${groupId}?day=${today}`)
       .set("Authorization", `Bearer ${tokenC}`)

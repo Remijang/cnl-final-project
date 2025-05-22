@@ -7,29 +7,17 @@ describe("Event API", () => {
   beforeEach(async () => {
     let res;
     await util.databaseCleanup();
-    res = await request(app)
-      .post("/api/auth/register")
-      .send({ name: "a", email: "a@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(201);
+    ({ id: _, token: tokena } = await util.registerAndLogin(
+      "a",
+      "a@example.com",
+      "passwordA"
+    ));
 
-    res = await request(app)
-      .post("/api/auth/login")
-      .send({ email: "a@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(200);
-    expect(res.body.token).toBeDefined();
-    tokena = res.body.token;
-
-    res = await request(app)
-      .post("/api/auth/register")
-      .send({ name: "b", email: "b@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(201);
-
-    res = await request(app)
-      .post("/api/auth/login")
-      .send({ email: "b@example.com", password: "testpass" });
-    expect(res.statusCode).toBe(200);
-    expect(res.body.token).toBeDefined();
-    tokenb = res.body.token;
+    ({ id: _, token: tokenb } = await util.registerAndLogin(
+      "b",
+      "b@example.com",
+      "passwordB"
+    ));
 
     res = await request(app)
       .post("/api/calendars")
