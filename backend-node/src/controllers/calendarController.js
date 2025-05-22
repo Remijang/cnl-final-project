@@ -52,7 +52,13 @@ exports.getVisibleCalendarByUsername = async (req, res) => {
   const { name } = req.query;
 
   try {
-    const id = userController._getIdByName(name);
+    const id = await userController._getIdByName(name);
+    console.log(
+      "try to get calendar by username, id: ",
+      id,
+      ", username: ",
+      name
+    );
     const result = await pool.query(
       `SELECT *
         FROM calendars 
