@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import Header from "./components/Header";
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -12,6 +14,7 @@ import RegisterPage from "./pages/RegisterPage";
 import CalendarDetailPage from "./pages/CalendarDetailPage";
 import GroupsPage from "./pages/GroupsPage";
 import PollsPage from "./pages/PollsPage";
+import CalendarSearchPage from "./pages/CalendarSearchPage";
 
 const CalendarDetailPageWrapper = () => {
   const { calendar_id } = useParams();
@@ -34,8 +37,16 @@ const PollPageWrapper = () => {
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setToken("");
+    window.location.href = "/login";
+  };
+
   return (
     <Router>
+      <Header token={token} onLogout={handleLogout} />
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/login" element={<LoginPage setToken={setToken} />} />
@@ -47,6 +58,10 @@ const App = () => {
         />
         <Route path="/group" element={<GroupsPageWrapper />} />
         <Route path="/poll" element={<PollPageWrapper />} />
+        <Route
+          path="/calendar-search/:username"
+          element={<CalendarSearchPage token={token} />}
+        />
       </Routes>
     </Router>
   );
