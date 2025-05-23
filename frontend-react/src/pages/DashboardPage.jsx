@@ -22,13 +22,16 @@ const DashboardPage = () => {
 
   const loadCalendars = async () => {
     try {
-      if (viewMode === "mine") {
-        const data = await getUserCalendar(token);
-        setMyCalendars(data);
-      } else {
-        const data = await getSubscribedCalendars(token);
-        setSubscribedCalendars(data);
-      }
+      const [myCals, subCals] = await Promise.all([
+        getUserCalendar(token),
+        getSubscribedCalendars(token),
+      ]);
+      setMyCalendars(myCals);
+      setSubscribedCalendars(subCals);
+      const subOnly = subCals.filter(
+        (sub) => !myCals.some((mine) => Number(mine.id) === Number(sub.id))
+      );
+      setSubscribedOnly(subOnly);
     } catch (err) {
       console.error(err);
     }
@@ -72,6 +75,8 @@ const DashboardPage = () => {
       console.error("Create calendar failed", err);
     }
   };
+
+  const handleUnsubscribe = () => {};
 
   return (
     <div>
@@ -121,6 +126,7 @@ const DashboardPage = () => {
             <SubscribedCalendarView
               subscribedCalendars={subscribedOnly}
               token={token}
+              onUnsubscribeSuccess={loadCalendars}
             />
           ) : (
             <MergedCalendar

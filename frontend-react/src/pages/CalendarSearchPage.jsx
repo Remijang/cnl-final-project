@@ -1,19 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getVisibleCalendarByUsername } from "../services/calendarService";
+import {
+  getVisibleCalendarByUsername,
+  getSubscribedCalendars,
+} from "../services/calendarService";
 import { getEventsByCalendar } from "../services/eventService";
-import { subscribeCalendar } from "../services/subscriptionService";
+import {
+  subscribeCalendar,
+  unsubscribeCalendar,
+} from "../services/subscriptionService";
 
 const CalendarSearchPage = ({ token }) => {
   const { username } = useParams();
   const [results, setResults] = useState([]);
   const [error, setError] = useState("");
   const [eventsMap, setEventsMap] = useState({}); // key: calendar_id, value: events
+  const [subscribedIds, setSubscribedIds] = useState([]);
 
   useEffect(() => {
+    setError("");
     const fetchCalendars = async () => {
       try {
         const data = await getVisibleCalendarByUsername(token, username);
+        console.log("visible calendar:", data);
         setResults(data);
       } catch (err) {
         console.error("查詢失敗", err);
@@ -22,7 +31,20 @@ const CalendarSearchPage = ({ token }) => {
     };
 
     if (token && username) fetchCalendars();
-  }, [token, username]);
+  }, [token, username, subscribedIds]);
+
+  useEffect(() => {
+    const setInitIds = async () => {
+      try {
+        const subscribedCalendars = await getSubscribedCalendars(token);
+        const ids = subscribedCalendars.map((c) => c.id);
+        setSubscribedIds(ids);
+      } catch (err) {
+        console.error("error: ", err);
+      }
+    };
+    if (token) setInitIds();
+  }, []);
 
   const handleToggleEvents = async (calendarId) => {
     if (eventsMap[calendarId]) {
@@ -44,11 +66,18 @@ const CalendarSearchPage = ({ token }) => {
 
   const handleSubscribe = async (calendarId) => {
     try {
-      await subscribeCalendar(token, calendarId);
-      alert("已成功訂閱");
+      if (subscribedIds.includes(calendarId)) {
+        await unsubscribeCalendar(token, calendarId);
+        setSubscribedIds((prev) => prev.filter((id) => id !== calendarId));
+        alert("已取消訂閱");
+      } else {
+        await subscribeCalendar(token, calendarId);
+        setSubscribedIds((prev) => [...prev, calendarId]);
+        alert("訂閱成功");
+      }
     } catch (err) {
-      console.error("訂閱失敗", err);
-      alert("訂閱失敗");
+      console.error("訂閱操作失敗", err);
+      alert("訂閱/取消失敗");
     }
   };
 
@@ -74,7 +103,7 @@ const CalendarSearchPage = ({ token }) => {
             onClick={() => handleSubscribe(cal.id)}
             style={{ marginLeft: "0.5em" }}
           >
-            訂閱
+            {subscribedIds.includes(cal.id) ? "取消訂閱" : "訂閱"}
           </button>
           {eventsMap[cal.id] && (
             <ul style={{ marginTop: "0.5em" }}>

@@ -1,5 +1,8 @@
+// 📁 src/components/MergedCalendar.jsx
 import React, { useEffect, useState } from "react";
 import { getEventsByCalendar } from "../services/eventService";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 
 const MergedCalendar = ({
   token,
@@ -7,6 +10,11 @@ const MergedCalendar = ({
   subscribedCalendars = [],
 }) => {
   const [mergedEvents, setMergedEvents] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const selectedEvents = mergedEvents.filter(
+    (ev) =>
+      new Date(ev.start_time).toDateString() === selectedDate.toDateString()
+  );
 
   useEffect(() => {
     const fetchAllEvents = async () => {
@@ -26,10 +34,7 @@ const MergedCalendar = ({
         }
       }
 
-      const sorted = allEvents.sort(
-        (a, b) => new Date(a.start_time) - new Date(b.start_time)
-      );
-      setMergedEvents(sorted);
+      setMergedEvents(allEvents);
     };
 
     if (token && (myCalendars.length > 0 || subscribedCalendars.length > 0)) {
@@ -37,14 +42,43 @@ const MergedCalendar = ({
     }
   }, [token, myCalendars, subscribedCalendars]);
 
+  const renderEventsOnDate = (date) => {
+    const dayEvents = mergedEvents.filter((ev) => {
+      const eventDate = new Date(ev.start_time).toISOString().slice(0, 10);
+      return eventDate === date.toISOString().slice(0, 10);
+    });
+
+    return (
+      <div className="tile-events">
+        {dayEvents.slice(0, 2).map((ev) => (
+          <div
+            className="event-dot"
+            key={ev.id}
+            title={`${ev.title} (${ev.calendarTitle})`}
+          >
+            • {ev.title.length > 5 ? ev.title.slice(0, 5) + "…" : ev.title}
+          </div>
+        ))}
+        {dayEvents.length > 2 && <div className="event-dot">⋯</div>}
+      </div>
+    );
+  };
+
   return (
     <div>
-      <h2>所有事件時序表</h2>
+      <h2>所有事件月曆</h2>
+      <Calendar
+        value={selectedDate}
+        onChange={setSelectedDate}
+        tileContent={({ date, view }) =>
+          view === "month" ? renderEventsOnDate(date) : null
+        }
+      />
+      <h3>{selectedDate.toLocaleDateString()} 的事件</h3>
       <ul>
-        {mergedEvents.map((ev) => (
+        {selectedEvents.map((ev) => (
           <li key={ev.id}>
-            <strong>{ev.title}</strong> - {ev.start_time} ~ {ev.end_time} <br />
-            <em>from: {ev.calendarTitle}</em>
+            {ev.title} - {ev.calendarTitle}
           </li>
         ))}
       </ul>
