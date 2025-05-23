@@ -6,7 +6,7 @@ export const createPoll = (token, data) =>
 export const inviteUserPoll = (token, pollId, data) =>
   apiFetch(`/polls/${pollId}/inviteUser`, "PUT", token, data);
 export const inviteGroupPoll = (token, pollId, data) =>
-  apiFetch(`/polls/${pollId}/inviteGroupPoll`, "PUT", token, data);
+  apiFetch(`/polls/${pollId}/inviteGroup`, "PUT", token, data);
 export const listPoll = (token) => apiFetch("/polls/listPoll", "GET", token);
 export const checkPoll = (token, pollId) =>
   apiFetch(`/polls/${pollId}`, "GET", token);
