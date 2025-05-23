@@ -5,13 +5,13 @@ const AvailabilitySelector = ({ day, timeSlots, selected, onChange }) => {
     <div>
       <h3>{day} 可用時段</h3>
       {timeSlots.map((slot) => (
-        <label key={slot} style={{ marginRight: "10px" }}>
+        <label key={slot.id} style={{ marginRight: "10px" }}>
           <input
             type="checkbox"
-            checked={selected.includes(slot)}
-            onChange={() => onChange(slot)}
+            checked={selected.includes(slot.id)}
+            onChange={() => onChange(slot.id)}
           />
-          {slot}
+          {`${slot.start_time} - ${slot.end_time}`}
         </label>
       ))}
     </div>
