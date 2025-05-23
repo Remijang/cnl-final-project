@@ -40,7 +40,8 @@ const App = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    setToken("");
+    //setToken("");
+    location.reload();
     window.location.href = "/login";
   };
 
@@ -56,7 +57,7 @@ const App = () => {
           path="/calendar/:calendar_id"
           element={<CalendarDetailPageWrapper />}
         />
-        <Route path="/group" element={<GroupsPageWrapper />} />
+        <Route path="/groups" element={<GroupsPageWrapper />} />
         <Route path="/polls" element={<PollPageWrapper />} />
         <Route
           path="/calendar-search/:username"

@@ -13,3 +13,5 @@ export const deleteCalendar = (token, id) =>
   apiFetch(`/calendars/${id}`, "DELETE", token);
 export const getVisibleCalendarByUsername = (token, username) =>
   apiFetch(`/calendars/user?name=${username}`, "GET", token);
+export const getSubscribedCalendars = (token) =>
+  apiFetch("/calendars/subscribed", "GET", token);

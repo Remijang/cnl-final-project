@@ -1,12 +1,14 @@
-// src/pages/CalendarSearchPage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getVisibleCalendarByUsername } from "../services/calendarService";
+import { getEventsByCalendar } from "../services/eventService";
+import { subscribeCalendar } from "../services/subscriptionService";
 
 const CalendarSearchPage = ({ token }) => {
   const { username } = useParams();
   const [results, setResults] = useState([]);
   const [error, setError] = useState("");
+  const [eventsMap, setEventsMap] = useState({}); // key: calendar_id, value: events
 
   useEffect(() => {
     const fetchCalendars = async () => {
@@ -22,14 +24,67 @@ const CalendarSearchPage = ({ token }) => {
     if (token && username) fetchCalendars();
   }, [token, username]);
 
+  const handleToggleEvents = async (calendarId) => {
+    if (eventsMap[calendarId]) {
+      // already fetched, toggle off
+      setEventsMap((prev) => {
+        const updated = { ...prev };
+        delete updated[calendarId];
+        return updated;
+      });
+    } else {
+      try {
+        const data = await getEventsByCalendar(token, calendarId);
+        setEventsMap((prev) => ({ ...prev, [calendarId]: data }));
+      } catch (err) {
+        console.error("讀取事件失敗", err);
+      }
+    }
+  };
+
+  const handleSubscribe = async (calendarId) => {
+    try {
+      await subscribeCalendar(token, calendarId);
+      alert("已成功訂閱");
+    } catch (err) {
+      console.error("訂閱失敗", err);
+      alert("訂閱失敗");
+    }
+  };
+
   return (
     <div style={{ padding: "1em" }}>
       <h2>使用者「{username}」的公開行事曆</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
       {results.map((cal) => (
-        <div key={cal.id} style={{ marginBottom: "1em" }}>
+        <div
+          key={cal.id}
+          style={{
+            marginBottom: "1.5em",
+            borderBottom: "1px solid #ccc",
+            paddingBottom: "1em",
+          }}
+        >
           <h4>{cal.title}</h4>
           <p>Calendar ID: {cal.id}</p>
+          <button onClick={() => handleToggleEvents(cal.id)}>
+            {eventsMap[cal.id] ? "隱藏事件" : "顯示事件"}
+          </button>
+          <button
+            onClick={() => handleSubscribe(cal.id)}
+            style={{ marginLeft: "0.5em" }}
+          >
+            訂閱
+          </button>
+          {eventsMap[cal.id] && (
+            <ul style={{ marginTop: "0.5em" }}>
+              {eventsMap[cal.id].map((ev) => (
+                <li key={ev.id}>
+                  {ev.title}：{ev.start_time} - {ev.end_time}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       ))}
     </div>

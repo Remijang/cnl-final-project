@@ -7,8 +7,6 @@ const LoginForm = ({ setToken }) => {
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (e) => {
-    console.log("login function:", login);
-    console.log("setToken is", setToken);
     e.preventDefault();
     try {
       const result = await login({ email, password });

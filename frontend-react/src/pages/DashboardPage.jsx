@@ -1,28 +1,61 @@
-import React, { useEffect, useState } from "react";
-import { getUserCalendar, createCalendar } from "../services/calendarService";
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  getUserCalendar,
+  getSubscribedCalendars,
+  createCalendar,
+} from "../services/calendarService";
 import CalendarList from "../components/CalendarList";
 import EventManager from "../components/EventManager";
 import LoginForm from "../components/LoginForm";
 import CalendarEditor from "../components/CalendarEditor";
 import { toggleVisibility } from "../services/permissionService";
+import SubscribedCalendarView from "../components/SubscribedCalendarView";
+import MergedCalendar from "../components/MergedCalendar";
 
 const DashboardPage = () => {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
-  const [calendars, setCalendars] = useState([]);
+  const [myCalendars, setMyCalendars] = useState([]);
+  const [subscribedCalendars, setSubscribedCalendars] = useState([]);
   const [selectedCalendarId, setSelectedCalendarId] = useState(null);
+  const [subscribedOnly, setSubscribedOnly] = useState([]);
+  const [viewMode, setViewMode] = useState("merged"); // "mine" or "subscribed"
 
   const loadCalendars = async () => {
     try {
-      const data = await getUserCalendar(token);
-      setCalendars(data);
+      if (viewMode === "mine") {
+        const data = await getUserCalendar(token);
+        setMyCalendars(data);
+      } else {
+        const data = await getSubscribedCalendars(token);
+        setSubscribedCalendars(data);
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
-    if (token) loadCalendars();
-  }, [token]);
+    if (!token) return;
+
+    const fetchAll = async () => {
+      try {
+        const [myCals, subCals] = await Promise.all([
+          getUserCalendar(token),
+          getSubscribedCalendars(token),
+        ]);
+        setMyCalendars(myCals);
+        setSubscribedCalendars(subCals);
+        const subOnly = subCals.filter(
+          (sub) => !myCals.some((mine) => Number(mine.id) === Number(sub.id))
+        );
+        setSubscribedOnly(subOnly);
+      } catch (err) {
+        console.error("Fetch failed", err);
+      }
+    };
+
+    fetchAll();
+  }, [token, viewMode]);
 
   const handleSelectCalendar = (id) => {
     setSelectedCalendarId(id);
@@ -32,10 +65,9 @@ const DashboardPage = () => {
     try {
       const newCalendar = await createCalendar(token, { title });
       if (shared) {
-        console.log("new calender id: ", newCalendar.id);
-        await toggleVisibility(token, newCalendar.id, true); // ⬅️ 透過 API 開啟公開權限
+        await toggleVisibility(token, newCalendar.id, true);
       }
-      await loadCalendars(); // 更新列表
+      await loadCalendars();
     } catch (err) {
       console.error("Create calendar failed", err);
     }
@@ -48,19 +80,54 @@ const DashboardPage = () => {
         <LoginForm setToken={setToken} />
       ) : (
         <>
-          <CalendarList calendars={calendars} onSelect={handleSelectCalendar} />
-          <h3>Create New Calendar</h3>
-          <CalendarEditor onSave={handleCreateCalendar} />
-          {selectedCalendarId && (
-            <>
-              <h3>
-                Events in Calendar:{" "}
-                {calendars.find((cal) => cal.id === selectedCalendarId)
-                  ?.title || `(ID: ${selectedCalendarId})`}
-              </h3>
+          <div style={{ marginBottom: "1em" }}>
+            <label>顯示： </label>
+            <select
+              value={viewMode}
+              onChange={(e) => {
+                setViewMode(e.target.value);
+                setSelectedCalendarId(null);
+              }}
+            >
+              <option value="merged">整合事件時序</option>
+              <option value="mine">我的行事曆</option>
+              <option value="subscribed">訂閱的行事曆</option>
+            </select>
+          </div>
 
-              <EventManager token={token} calendar_id={selectedCalendarId} />
+          {viewMode === "mine" ? (
+            <>
+              <CalendarList
+                calendars={myCalendars}
+                onSelect={handleSelectCalendar}
+              />
+              <h3>Create New Calendar</h3>
+              <CalendarEditor onSave={handleCreateCalendar} />
+              {selectedCalendarId && (
+                <>
+                  <h3>
+                    Events in Calendar:{" "}
+                    {myCalendars.find((cal) => cal.id === selectedCalendarId)
+                      ?.title || `(ID: ${selectedCalendarId})`}
+                  </h3>
+                  <EventManager
+                    token={token}
+                    calendar_id={selectedCalendarId}
+                  />
+                </>
+              )}
             </>
+          ) : viewMode === "subscribed" ? (
+            <SubscribedCalendarView
+              subscribedCalendars={subscribedOnly}
+              token={token}
+            />
+          ) : (
+            <MergedCalendar
+              token={token}
+              myCalendars={myCalendars}
+              subscribedCalendars={subscribedOnly}
+            />
           )}
         </>
       )}
