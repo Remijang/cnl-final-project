@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getEventsByCalendar } from "../services/eventService";
 import { unsubscribeCalendar } from "../services/subscriptionService";
+import MergedCalendar from "./MergedCalendar";
 
 const SubscribedCalendarView = ({
   subscribedCalendars = [],
@@ -55,13 +56,11 @@ const SubscribedCalendarView = ({
         >
           <h3>{cal.title}</h3>
           <button onClick={() => handleUnsubscribe(cal.id)}>取消訂閱</button>
-          <ul>
-            {(calendarEvents[cal.id] || []).map((ev) => (
-              <li key={ev.id}>
-                {ev.title}：{ev.start_time} - {ev.end_time}
-              </li>
-            ))}
-          </ul>
+          <MergedCalendar
+            token={token}
+            myCalendars={[]}
+            subscribedCalendars={[cal]}
+          />
         </div>
       ))}
     </div>

@@ -29,7 +29,14 @@ export async function apiFetch(
   }
 
   const response = await fetch(`${API_BASE}/api${endpoint}`, config);
-  const result = await response.json();
+  let result = [];
+  if (response.status !== 204) {
+    try {
+      result = await response.json();
+    } catch {
+      result = {};
+    }
+  }
 
   if (!response.ok) {
     throw new Error(result.message || "API 錯誤");

@@ -83,7 +83,6 @@ const MergedCalendar = ({
 
   return (
     <div>
-      <h2>所有事件月曆</h2>
       <div>
         <Calendar
           value={selectedDate}

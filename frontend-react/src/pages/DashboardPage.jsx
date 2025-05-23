@@ -110,11 +110,11 @@ const DashboardPage = () => {
               <CalendarEditor onSave={handleCreateCalendar} />
               {selectedCalendarId && (
                 <>
-                  <h3>
-                    Events in Calendar:{" "}
+                  <h1>
+                    Calendar:{" "}
                     {myCalendars.find((cal) => cal.id === selectedCalendarId)
                       ?.title || `(ID: ${selectedCalendarId})`}
-                  </h3>
+                  </h1>
                   <EventManager
                     token={token}
                     calendar_id={selectedCalendarId}

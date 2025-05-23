@@ -4,12 +4,15 @@ import {
   deleteEvent,
   getEventsByCalendar,
 } from "../services/eventService";
+import { getUserCalendar } from "../services/calendarService";
+import MergedCalendar from "./MergedCalendar";
 
 const EventManager = ({ token, calendar_id = 1 }) => {
   const [events, setEvents] = useState([]);
   const [title, setTitle] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [calendars, setCalendars] = useState([]);
 
   const fetchEvents = async () => {
     try {
@@ -17,6 +20,15 @@ const EventManager = ({ token, calendar_id = 1 }) => {
       setEvents(data);
     } catch (err) {
       console.error("Failed to load events", err);
+    }
+  };
+
+  const fetchCalendars = async () => {
+    try {
+      const data = await getUserCalendar(token);
+      setCalendars(data);
+    } catch (err) {
+      console.error("Failed to load calendar", err);
     }
   };
 
@@ -45,9 +57,13 @@ const EventManager = ({ token, calendar_id = 1 }) => {
     if (token) fetchEvents();
   }, [token, calendar_id]);
 
+  useEffect(() => {
+    if (token) fetchCalendars();
+    console.log("Calendars:", calendars);
+  }, [token]);
+
   return (
     <div>
-      <h2>Events</h2>
       <input
         type="text"
         value={title}
@@ -65,6 +81,12 @@ const EventManager = ({ token, calendar_id = 1 }) => {
         onChange={(e) => setEndTime(e.target.value)}
       />
       <button onClick={handleCreateEvent}>Create Event</button>
+      <MergedCalendar
+        token={token}
+        myCalendars={[]}
+        subscribedCalendars={calendars.filter((cal) => cal.id === calendar_id)}
+      />
+      <h2>Events</h2>
       <ul>
         {events.map((e) => (
           <li key={e.id}>
