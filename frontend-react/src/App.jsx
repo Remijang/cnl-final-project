@@ -57,7 +57,7 @@ const App = () => {
           element={<CalendarDetailPageWrapper />}
         />
         <Route path="/group" element={<GroupsPageWrapper />} />
-        <Route path="/poll" element={<PollPageWrapper />} />
+        <Route path="/polls" element={<PollPageWrapper />} />
         <Route
           path="/calendar-search/:username"
           element={<CalendarSearchPage token={token} />}
