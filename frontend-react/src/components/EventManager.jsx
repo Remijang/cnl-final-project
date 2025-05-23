@@ -21,12 +21,15 @@ const EventManager = ({ token, calendar_id = 1 }) => {
   };
 
   const handleCreateEvent = async () => {
+    const toUTC = (localStr) => new Date(localStr).toISOString(); // local → UTC ISO
+
     await createEvent(token, {
       calendar_id: calendar_id,
       title: title,
-      start_time: startTime,
-      end_time: endTime,
+      start_time: toUTC(startTime),
+      end_time: toUTC(endTime),
     });
+
     setTitle("");
     setStartTime("");
     setEndTime("");
@@ -65,7 +68,9 @@ const EventManager = ({ token, calendar_id = 1 }) => {
       <ul>
         {events.map((e) => (
           <li key={e.id}>
-            <strong>{e.title}</strong> ({e.start_time} → {e.end_time})
+            <strong>{e.title}</strong> (
+            {new Date(e.start_time).toLocaleString()} →{" "}
+            {new Date(e.end_time).toLocaleString()})
             <button onClick={() => handleDeleteEvent(e.id)}>Delete</button>
           </li>
         ))}
