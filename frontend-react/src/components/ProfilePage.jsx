@@ -28,6 +28,7 @@ import { getProfile, updateProfile } from "../services/authService";
 };*/
 
 const ProfilePage = () => {
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -40,9 +41,11 @@ const ProfilePage = () => {
 
   // 取得使用者資料
   useEffect(() => {
+    if (!token) return;
+
     const fetchProfile = async () => {
       try {
-        const data = await getProfile();
+        const data = await getProfile(token);
         setProfile(data);
         setFormData({
           name: data.name,
@@ -56,9 +59,8 @@ const ProfilePage = () => {
       }
     };
     fetchProfile();
-  }, []);
+  }, [token]);
 
-  // 處理表單變更
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -66,14 +68,14 @@ const ProfilePage = () => {
     });
   };
 
-  // 提交表單
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!token) return;
     setError(null);
     setSuccessMsg(null);
 
     try {
-      const updatedProfile = await updateProfile(formData);
+      const updatedProfile = await updateProfile(formData, token);
       setProfile(updatedProfile);
       setSuccessMsg("個人資料更新成功！");
     } catch (err) {
