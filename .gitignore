@@ -1,5 +1,7 @@
 backend-node/node_modules
 backend-node/package-lock.json
-frontend-react/node_modules
+frontend-react/node_modules/*
+!frontend-react/node_modules/react-calendar
+!frontend-react/node_modules/react-calendar
 frontend-react/package-lock.json
 package-lock.json
