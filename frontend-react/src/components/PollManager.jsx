@@ -1,347 +1,414 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  createGroup,
+  getAllGroup,
+  getGroup,
+  addGroupUser,
+  removeGroupUser,
+} from "../services/groupService";
 
-const PollManager = ({
-  polls,
-  pollDetails,
-  onCheckPoll,
-  onCreatePoll,
-  onVotePoll,
-  onConfirmPoll,
-  onCancelPoll,
-  onInviteUserPoll,
-  onInviteGroupPoll,
-}) => {
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [timeRanges, setTimeRanges] = useState([
-    { start_time: "", end_time: "" },
-  ]);
-  const [selectedTimeRanges, setSelectedTimeRanges] = useState({});
-  const [confirmSelections, setConfirmSelections] = useState({});
-  const [visiblePolls, setVisiblePolls] = useState({});
+const GroupManager = ({ token, onCheckAvailability }) => {
+  const [groups, setGroups] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState({ type: "", text: "" }); // State for custom messages
 
-  const [inviteInputs, setInviteInputs] = useState({}); // { pollId: { user: "", group: "" } }
-  const [showInviteFields, setShowInviteFields] = useState({}); // { pollId: { user: false, group: false } }
+  // State for Create Group Modal
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
 
-  const inputStyle = {
-    width: "300px",
-    padding: "8px",
-    marginBottom: "10px",
-    border: "1px solid #ccc",
-    borderRadius: "4px",
-    display: "block",
-  };
+  // State for Add User Modal
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [userIdToAdd, setUserIdToAdd] = useState("");
+  const [currentGroupIdForAdd, setCurrentGroupIdForAdd] = useState(null);
 
-  const handleAddTimeRange = () => {
-    setTimeRanges([...timeRanges, { start_time: "", end_time: "" }]);
-  };
+  // State for Remove User Confirmation Modal
+  const [showConfirmRemoveModal, setShowConfirmRemoveModal] = useState(false);
+  const [removeConfirmData, setRemoveConfirmData] = useState(null); // { groupId, userIdToRemove, userName }
 
-  const handleRemoveTimeRange = (index) => {
-    if (timeRanges.length === 1) return;
-    setTimeRanges(timeRanges.filter((_, i) => i !== index));
-  };
-
-  const handleTimeRangeChange = (index, field, value) => {
-    const newTimeRanges = [...timeRanges];
-    newTimeRanges[index][field] = value;
-    setTimeRanges(newTimeRanges);
-  };
-
-  const handleCreatePoll = () => {
-    if (!title.trim()) {
-      alert("Title is required");
+  const fetchGroupsAndMembers = useCallback(async () => {
+    if (!token) {
+      setGroups([]);
       return;
     }
-    for (const range of timeRanges) {
-      if (!range.start_time || !range.end_time) {
-        alert("Please fill out all time ranges");
-        return;
-      }
-      if (new Date(range.start_time) >= new Date(range.end_time)) {
-        alert("Start time must be before end time in each range");
-        return;
-      }
+    setIsLoading(true);
+    setError(null);
+    setMessage({ type: "", text: "" }); // Clear messages on new fetch
+    try {
+      const basicGroups = await getAllGroup(token);
+      const detailedGroups = await Promise.all(
+        basicGroups.map(async (group) => {
+          try {
+            const groupDetails = await getGroup(token, group.id);
+            return groupDetails;
+          } catch (groupError) {
+            console.error(
+              `Failed to fetch details for group ${group.name} (ID: ${group.id}):`,
+              groupError
+            );
+            return { ...group, members: [], errorLoadingMembers: true };
+          }
+        })
+      );
+      setGroups(detailedGroups);
+    } catch (err) {
+      console.error("Failed to fetch groups:", err);
+      setError(err.message || "Failed to fetch groups");
+      setMessage({
+        type: "error",
+        text: `載入群組失敗：${err.message || "未知錯誤"}`,
+      });
+      setGroups([]);
+    } finally {
+      setIsLoading(false);
     }
+  }, [token]);
 
-    const newPoll = { title, description, time_ranges: timeRanges };
-    onCreatePoll(newPoll);
+  useEffect(() => {
+    fetchGroupsAndMembers();
+  }, [fetchGroupsAndMembers]);
 
-    setTitle("");
-    setDescription("");
-    setTimeRanges([{ start_time: "", end_time: "" }]);
-    setShowCreateForm(false);
+  // --- Create Group Handlers ---
+  const handleCreateGroupClick = () => {
+    setNewGroupName("");
+    setShowCreateGroupModal(true);
   };
 
-  const handleCheckClick = (pollId) => {
-    onCheckPoll(pollId);
-    setVisiblePolls((prev) => ({ ...prev, [pollId]: true }));
-    setSelectedTimeRanges((prev) => ({ ...prev, [pollId]: [] }));
-  };
-
-  const handleToggleTimeRange = (pollId, timeRangeId) => {
-    setSelectedTimeRanges((prev) => {
-      const current = prev[pollId] || [];
-      if (current.includes(timeRangeId)) {
-        return {
-          ...prev,
-          [pollId]: current.filter((id) => id !== timeRangeId),
-        };
-      } else {
-        return {
-          ...prev,
-          [pollId]: [...current, timeRangeId],
-        };
-      }
-    });
-  };
-
-  const handleSelectConfirmTimeRange = (pollId, timeRangeId) => {
-    setConfirmSelections((prev) => ({
-      ...prev,
-      [pollId]: timeRangeId,
-    }));
-  };
-
-  const handleVote = (pollId) => {
-    onVotePoll(pollId, selectedTimeRanges[pollId] || []);
-    setVisiblePolls((prev) => {
-      const newVisible = { ...prev };
-      delete newVisible[pollId];
-      return newVisible;
-    });
-  };
-
-  const handleInviteSubmit = (pollId, type) => {
-    const inputValue = inviteInputs[pollId]?.[type] || "";
-    if (!inputValue.trim()) {
-      alert(`Please enter ${type === "user" ? "user" : "group"} ID.`);
+  const handleCreateGroupConfirm = async () => {
+    if (!newGroupName.trim()) {
+      setMessage({ type: "error", text: "群組名稱不能為空。" });
       return;
     }
-
-    const id = inputValue.trim();
-
-    if (type === "user") {
-      onInviteUserPoll(pollId, id);
-    } else {
-      onInviteGroupPoll(pollId, id);
+    setShowCreateGroupModal(false);
+    try {
+      setIsLoading(true);
+      await createGroup(token, { name: newGroupName.trim() });
+      setMessage({
+        type: "success",
+        text: `群組 "${newGroupName}" 建立成功！`,
+      });
+      await fetchGroupsAndMembers(); // Refresh the list
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: `建立群組失敗：${err.message || "未知錯誤"}`,
+      });
+      setError(err.message || "Failed to create group");
+    } finally {
+      setIsLoading(false);
     }
-
-    setInviteInputs((prev) => ({
-      ...prev,
-      [pollId]: { ...prev[pollId], [type]: "" },
-    }));
-    setShowInviteFields((prev) => ({
-      ...prev,
-      [pollId]: { ...prev[pollId], [type]: false },
-    }));
   };
+
+  const handleCreateGroupCancel = () => {
+    setShowCreateGroupModal(false);
+    setNewGroupName("");
+  };
+
+  // --- Add User Handlers ---
+  const handleAddUserClick = (groupId) => {
+    setUserIdToAdd("");
+    setCurrentGroupIdForAdd(groupId);
+    setShowAddUserModal(true);
+  };
+
+  const handleAddUserConfirm = async () => {
+    if (!userIdToAdd.trim()) {
+      setMessage({ type: "error", text: "成員 User ID 不能為空。" });
+      return;
+    }
+    setShowAddUserModal(false);
+    try {
+      setIsLoading(true);
+      await addGroupUser(token, currentGroupIdForAdd, userIdToAdd.trim());
+      setMessage({
+        type: "success",
+        text: `成員 ${userIdToAdd} 已新增至群組。`,
+      });
+      await fetchGroupsAndMembers(); // Refresh the list
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: `新增成員失敗：${err.message || "未知錯誤"}`,
+      });
+      setError(err.message || "Failed to add user to group");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddUserCancel = () => {
+    setShowAddUserModal(false);
+    setUserIdToAdd("");
+    setCurrentGroupIdForAdd(null);
+  };
+
+  // --- Remove User Handlers ---
+  const handleRemoveUserClick = (groupId, userIdToRemove, userName) => {
+    setRemoveConfirmData({ groupId, userIdToRemove, userName });
+    setShowConfirmRemoveModal(true);
+  };
+
+  const handleRemoveUserConfirm = async () => {
+    if (!removeConfirmData) return; // Should not happen if modal is shown correctly
+    setShowConfirmRemoveModal(false);
+    try {
+      setIsLoading(true);
+      await removeGroupUser(
+        token,
+        removeConfirmData.groupId,
+        removeConfirmData.userIdToRemove
+      );
+      setMessage({
+        type: "success",
+        text: `成員 ${
+          removeConfirmData.userName || removeConfirmData.userIdToRemove
+        } 已從群組移除。`,
+      });
+      await fetchGroupsAndMembers(); // Refresh the list
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: `移除成員失敗：${err.message || "未知錯誤"}`,
+      });
+      setError(err.message || "Failed to remove user from group");
+    } finally {
+      setIsLoading(false);
+      setRemoveConfirmData(null);
+    }
+  };
+
+  const handleRemoveUserCancel = () => {
+    setShowConfirmRemoveModal(false);
+    setRemoveConfirmData(null);
+  };
+
+  if (!token) {
+    return (
+      <p className="text-center text-gray-600 p-4">請先登入以管理群組。</p>
+    );
+  }
 
   return (
-    <div>
-      <h2>Polls</h2>
-      <button onClick={() => setShowCreateForm(true)}>Create New Poll</button>
-
-      {showCreateForm && (
-        <div style={{ marginTop: "20px" }}>
-          <h3>Create New Poll</h3>
-          <input
-            type="text"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            style={inputStyle}
-          />
-          <textarea
-            placeholder="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={4}
-            style={{ ...inputStyle, resize: "none" }}
-          />
-          {timeRanges.map((range, index) => (
-            <div key={index} style={{ marginTop: "5px" }}>
-              <input
-                type="datetime-local"
-                value={range.start_time}
-                onChange={(e) =>
-                  handleTimeRangeChange(index, "start_time", e.target.value)
-                }
-              />
-              to
-              <input
-                type="datetime-local"
-                value={range.end_time}
-                onChange={(e) =>
-                  handleTimeRangeChange(index, "end_time", e.target.value)
-                }
-              />
-              {timeRanges.length > 1 && (
-                <button onClick={() => handleRemoveTimeRange(index)}>
-                  Remove
-                </button>
-              )}
-            </div>
-          ))}
-          <button onClick={handleAddTimeRange} style={{ marginTop: "5px" }}>
-            Add Time Range
-          </button>
-          <br />
-          <button onClick={handleCreatePoll} style={{ marginTop: "10px" }}>
-            Submit
-          </button>
+    <div className="space-y-6">
+      {/* Message Box */}
+      {message.text && (
+        <div
+          className={`p-3 mb-4 rounded-md text-sm text-center ${
+            message.type === "success"
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
+          }`}
+          role="alert"
+        >
+          {message.text}
         </div>
       )}
 
-      <ul>
-        {polls.map((poll) => (
-          <li key={poll.id} style={{ marginBottom: "20px" }}>
-            <strong>{poll.title}</strong>
-            {poll.description && <p>{poll.description}</p>}
-            Status:{" "}
-            {poll.is_cancelled
-              ? "Cancelled"
-              : poll.is_confirmed
-              ? "Confirmed"
-              : "Ongoing"}
-            <div style={{ marginTop: "8px" }}>
-              <button onClick={() => handleCheckClick(poll.id)}>Check</button>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">我的群組</h2>
+        <button
+          onClick={handleCreateGroupClick}
+          disabled={isLoading}
+          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoading ? "處理中..." : "建立新群組"}
+        </button>
+      </div>
+
+      {isLoading && groups.length === 0 && (
+        <p className="text-blue-600 font-medium text-center">載入群組中...</p>
+      )}
+      {error && (
+        <p className="text-red-600 font-medium text-center">
+          錯誤：{error}{" "}
+          <button
+            onClick={fetchGroupsAndMembers}
+            disabled={isLoading}
+            className="text-blue-600 hover:text-blue-800 font-semibold ml-2"
+          >
+            重試
+          </button>
+        </p>
+      )}
+
+      {!isLoading && !error && groups.length === 0 && (
+        <p className="text-gray-600 text-center">
+          您尚未加入任何群組，或沒有群組可顯示。
+        </p>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {groups.map((group) => (
+          <div
+            key={group.id}
+            className="bg-white rounded-lg shadow-md border border-gray-200 p-6 flex flex-col"
+          >
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              {group.name} (ID: {group.id})
+            </h3>
+            {group.owner_id && (
+              <p className="text-sm text-gray-500 mb-4">
+                群組擁有者 ID: {group.owner_id}
+              </p>
+            )}
+
+            <h4 className="text-lg font-semibold text-gray-700 mb-2">成員:</h4>
+            {group.errorLoadingMembers && (
+              <p className="text-orange-600 text-sm mb-2">
+                無法載入此群組的成員列表。
+              </p>
+            )}
+            {(!group.members || group.members.length === 0) &&
+              !group.errorLoadingMembers && (
+                <p className="text-gray-600 text-sm mb-2">
+                  此群組目前沒有成員。
+                </p>
+              )}
+            {group.members && group.members.length > 0 && (
+              <ul className="list-disc list-inside space-y-1 text-gray-800 mb-4 flex-grow">
+                {group.members.map((user) => (
+                  <li
+                    key={user.id}
+                    className="flex justify-between items-center"
+                  >
+                    <span>
+                      {user.name || "N/A"} ({user.email || "N/A"}) (ID:{" "}
+                      {user.id})
+                    </span>
+                    <button
+                      onClick={() =>
+                        handleRemoveUserClick(
+                          group.id,
+                          user.id,
+                          user.name || user.id
+                        )
+                      }
+                      disabled={isLoading}
+                      className="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600 transition duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ml-2"
+                    >
+                      移除
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="flex flex-wrap gap-2 mt-auto pt-4 border-t border-gray-100">
               <button
-                onClick={() =>
-                  setShowInviteFields((prev) => ({
-                    ...prev,
-                    [poll.id]: { ...(prev[poll.id] || {}), user: true },
-                  }))
-                }
-                style={{ marginLeft: "5px" }}
+                onClick={() => handleAddUserClick(group.id)}
+                disabled={isLoading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Invite User
+                新增成員
+              </button>
+              {/* Add a button for checking availability here, linked to onCheckAvailability prop */}
+              {onCheckAvailability && (
+                <button
+                  onClick={() => onCheckAvailability(group.id, group.name)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200 shadow-md"
+                >
+                  查詢空閒時段
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Create Group Modal */}
+      {showCreateGroupModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              建立新群組
+            </h3>
+            <input
+              type="text"
+              placeholder="群組名稱"
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
+            />
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCreateGroupCancel}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
+              >
+                取消
               </button>
               <button
-                onClick={() =>
-                  setShowInviteFields((prev) => ({
-                    ...prev,
-                    [poll.id]: { ...(prev[poll.id] || {}), group: true },
-                  }))
-                }
-                style={{ marginLeft: "5px" }}
+                onClick={handleCreateGroupConfirm}
+                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition duration-200"
               >
-                Invite Group
+                建立
               </button>
             </div>
-            {/* Invite User input */}
-            {showInviteFields[poll.id]?.user && (
-              <div style={{ marginTop: "8px" }}>
-                <input
-                  type="text"
-                  placeholder="Enter user ID"
-                  value={inviteInputs[poll.id]?.user || ""}
-                  onChange={(e) =>
-                    setInviteInputs((prev) => ({
-                      ...prev,
-                      [poll.id]: {
-                        ...(prev[poll.id] || {}),
-                        user: e.target.value,
-                      },
-                    }))
-                  }
-                  style={inputStyle}
-                />
-                <button onClick={() => handleInviteSubmit(poll.id, "user")}>
-                  Send
-                </button>
-              </div>
-            )}
-            {/* Invite Group input */}
-            {showInviteFields[poll.id]?.group && (
-              <div style={{ marginTop: "8px" }}>
-                <input
-                  type="text"
-                  placeholder="Enter group ID"
-                  value={inviteInputs[poll.id]?.group || ""}
-                  onChange={(e) =>
-                    setInviteInputs((prev) => ({
-                      ...prev,
-                      [poll.id]: {
-                        ...(prev[poll.id] || {}),
-                        group: e.target.value,
-                      },
-                    }))
-                  }
-                  style={inputStyle}
-                />
-                <button onClick={() => handleInviteSubmit(poll.id, "group")}>
-                  Send
-                </button>
-              </div>
-            )}
-            {/* Voting and Confirming */}
-            {visiblePolls[poll.id] && pollDetails[poll.id] && (
-              <>
-                <div style={{ marginTop: "10px" }}>
-                  {pollDetails[poll.id].map((tr) => (
-                    <label
-                      key={tr.id}
-                      style={{ display: "block", marginBottom: "5px" }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={
-                          selectedTimeRanges[poll.id]?.includes(tr.id) || false
-                        }
-                        onChange={() => handleToggleTimeRange(poll.id, tr.id)}
-                      />
-                      {new Date(tr.start_time).toLocaleString()} -{" "}
-                      {new Date(tr.end_time).toLocaleString()}
-                      <strong> ({tr.available_count || 0} votes)</strong>
-                    </label>
-                  ))}
-                </div>
+          </div>
+        </div>
+      )}
 
-                <button
-                  onClick={() => handleVote(poll.id)}
-                  style={{ marginTop: "10px" }}
-                >
-                  Vote
-                </button>
+      {/* Add User Modal */}
+      {showAddUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              新增成員至群組
+            </h3>
+            <p className="text-gray-600 mb-4">請輸入要新增的成員 User ID：</p>
+            <input
+              type="text"
+              placeholder="User ID"
+              value={userIdToAdd}
+              onChange={(e) => setUserIdToAdd(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+            />
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleAddUserCancel}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleAddUserConfirm}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200"
+              >
+                新增
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-                <div style={{ marginTop: "10px" }}>
-                  <select
-                    value={confirmSelections[poll.id] || ""}
-                    onChange={(e) =>
-                      handleSelectConfirmTimeRange(poll.id, e.target.value)
-                    }
-                  >
-                    <option value="">-- Confirm Time --</option>
-                    {pollDetails[poll.id].map((tr) => (
-                      <option key={tr.id} value={tr.id}>
-                        {new Date(tr.start_time).toLocaleString()} -{" "}
-                        {new Date(tr.end_time).toLocaleString()}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() =>
-                      onConfirmPoll(poll.id, confirmSelections[poll.id])
-                    }
-                    style={{ marginLeft: "10px" }}
-                  >
-                    Confirm
-                  </button>
-                </div>
-              </>
-            )}
-            <button
-              onClick={() => onCancelPoll(poll.id)}
-              style={{ marginTop: "10px" }}
-            >
-              Cancel
-            </button>
-          </li>
-        ))}
-      </ul>
+      {/* Remove User Confirmation Modal */}
+      {showConfirmRemoveModal && removeConfirmData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              確認移除成員
+            </h3>
+            <p className="text-gray-600 mb-4">
+              確定要從群組移除成員 "{removeConfirmData.userName}" (ID:{" "}
+              {removeConfirmData.userIdToRemove})？
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleRemoveUserCancel}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleRemoveUserConfirm}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200"
+              >
+                移除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default PollManager;
+export default GroupManager;

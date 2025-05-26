@@ -6,11 +6,12 @@ import {
 } from "../services/calendarService";
 import CalendarList from "../components/CalendarList";
 import EventManager from "../components/EventManager";
-import LoginForm from "../components/LoginForm";
+import LoginForm from "../components/LoginForm"; // LoginForm is still imported but will not be rendered directly if redirecting
 import CalendarEditor from "../components/CalendarEditor";
 import { toggleVisibility } from "../services/permissionService";
 import SubscribedCalendarView from "../components/SubscribedCalendarView";
 import MergedCalendar from "../components/MergedCalendar";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const DashboardPage = () => {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
@@ -20,6 +21,9 @@ const DashboardPage = () => {
   const [subscribedOnly, setSubscribedOnly] = useState([]);
   const [viewMode, setViewMode] = useState("merged"); // "mine" or "subscribed"
 
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  // Original loadCalendars function
   const loadCalendars = async () => {
     try {
       const [myCals, subCals] = await Promise.all([
@@ -38,8 +42,13 @@ const DashboardPage = () => {
   };
 
   useEffect(() => {
-    if (!token) return;
+    // Redirect to login page if no token is found
+    if (!token) {
+      navigate("/login");
+      return; // Stop further rendering of dashboard content
+    }
 
+    // Original fetchAll logic for logged-in users
     const fetchAll = async () => {
       try {
         const [myCals, subCals] = await Promise.all([
@@ -58,7 +67,7 @@ const DashboardPage = () => {
     };
 
     fetchAll();
-  }, [token, viewMode]);
+  }, [token, viewMode, navigate]); // Added navigate to dependencies
 
   const handleSelectCalendar = (id) => {
     setSelectedCalendarId(id);
@@ -78,65 +87,109 @@ const DashboardPage = () => {
 
   const handleUnsubscribe = () => {};
 
+  // If there's no token, return null to prevent rendering dashboard UI before redirect
+  if (!token) {
+    return null; // Or a small loading spinner if desired
+  }
+
   return (
-    <div>
-      <h1>My Calendars</h1>
-      {!token ? (
-        <LoginForm setToken={setToken} />
-      ) : (
-        <>
-          <div style={{ marginBottom: "1em" }}>
-            <label>顯示： </label>
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 font-sans">
+      <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-10">
+        {/* Header Section: Title and View Mode Selector - ONLY when logged in */}
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
+          <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight text-center sm:text-left mb-4 sm:mb-0">
+            Calendar Dashboard
+          </h1>
+
+          {/* View Mode Selector (formerly "search box" or main control) */}
+          <div className="flex items-center">
+            <label
+              htmlFor="view-mode-select"
+              className="text-gray-700 font-medium mr-2 whitespace-nowrap"
+            >
+              顯示：{" "}
+            </label>
             <select
+              id="view-mode-select"
               value={viewMode}
               onChange={(e) => {
                 setViewMode(e.target.value);
                 setSelectedCalendarId(null);
               }}
+              className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 w-full sm:w-auto"
             >
               <option value="merged">整合事件時序</option>
               <option value="mine">我的行事曆</option>
               <option value="subscribed">訂閱的行事曆</option>
             </select>
           </div>
+        </div>
 
-          {viewMode === "mine" ? (
-            <>
+        {/* Conditional Rendering based on viewMode */}
+        {viewMode === "mine" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* My Calendars List and Create New Calendar */}
+            <div className="bg-gray-50 p-6 rounded-lg shadow-inner">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                我的行事曆
+              </h2>
               <CalendarList
                 calendars={myCalendars}
                 onSelect={handleSelectCalendar}
               />
-              <h3>Create New Calendar</h3>
+              <h3 className="text-xl font-bold text-gray-800 mt-8 mb-4">
+                建立新行事曆
+              </h3>
               <CalendarEditor onSave={handleCreateCalendar} />
-              {selectedCalendarId && (
+            </div>
+
+            {/* Selected Calendar Event Manager */}
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              {selectedCalendarId ? (
                 <>
-                  <h1>
-                    Calendar:{" "}
-                    {myCalendars.find((cal) => cal.id === selectedCalendarId)
-                      ?.title || `(ID: ${selectedCalendarId})`}
-                  </h1>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                    管理行事曆：{" "}
+                    <span className="text-blue-600">
+                      {myCalendars.find((cal) => cal.id === selectedCalendarId)
+                        ?.title || `(ID: ${selectedCalendarId})`}
+                    </span>
+                  </h2>
                   <EventManager
                     token={token}
                     calendar_id={selectedCalendarId}
                   />
                 </>
+              ) : (
+                <div className="text-center text-gray-600 h-full flex items-center justify-center">
+                  <p>請從左側選擇一個行事曆來管理事件。</p>
+                </div>
               )}
-            </>
-          ) : viewMode === "subscribed" ? (
+            </div>
+          </div>
+        ) : viewMode === "subscribed" ? (
+          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              我訂閱的行事曆
+            </h2>
             <SubscribedCalendarView
               subscribedCalendars={subscribedOnly}
               token={token}
               onUnsubscribeSuccess={loadCalendars}
             />
-          ) : (
+          </div>
+        ) : (
+          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              整合行事曆事件
+            </h2>
             <MergedCalendar
               token={token}
               myCalendars={myCalendars}
               subscribedCalendars={subscribedOnly}
             />
-          )}
-        </>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
