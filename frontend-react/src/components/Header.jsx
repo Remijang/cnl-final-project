@@ -42,8 +42,12 @@ const Header = ({ token, onLogout }) => {
       <Link to="/polls" style={{ marginRight: "1em" }}>
         Polls
       </Link>
+
       <Link to="/groups" style={{ marginRight: "1em" }}>
         Groups
+      </Link>
+      <Link to="/profile" style={{ marginRight: "1em" }}>
+        Profile
       </Link>
       {token ? (
         <button onClick={onLogout} style={{ float: "right" }}>

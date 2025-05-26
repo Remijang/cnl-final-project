@@ -15,6 +15,7 @@ import CalendarDetailPage from "./pages/CalendarDetailPage";
 import GroupsPage from "./pages/GroupsPage";
 import PollsPage from "./pages/PollsPage";
 import CalendarSearchPage from "./pages/CalendarSearchPage";
+import ProfilePage from "./components/ProfilePage";
 
 const CalendarDetailPageWrapper = () => {
   const { calendar_id } = useParams();
@@ -59,6 +60,7 @@ const App = () => {
         />
         <Route path="/groups" element={<GroupsPageWrapper />} />
         <Route path="/polls" element={<PollPageWrapper />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route
           path="/calendar-search/:username"
           element={<CalendarSearchPage token={token} />}
