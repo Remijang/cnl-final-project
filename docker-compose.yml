@@ -2,11 +2,28 @@ version: "3.8"
 
 services:
   frontend:
+    container_name: frontend
     build: frontend-react
     ports:
       - "80:80"
     depends_on:
       - backend
+    links:
+      - backend
+      - backend:backend
+
+  frontend-dev:
+    container_name: frontend-dev
+    build:
+      context: frontend-react
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend-react/src:/app/src
+      - ./frontend-react/public:/app/public
     links:
       - backend
       - backend:backend
@@ -26,6 +43,7 @@ services:
       - test_db:test_db
 
   db:
+    container_name: db
     build: database/db
     restart: always
     volumes:
@@ -35,6 +53,7 @@ services:
       - "5432:5432"
 
   test_db:
+    container_name: test_db
     build: database/test_db
     restart: always
     volumes:
