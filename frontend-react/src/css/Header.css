@@ -1,0 +1,110 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+.header {
+  position: sticky; /* 讓他在畫面上方固定 */
+  top: 0;
+  z-index: 1000;
+  background-color: #f0f0f0;
+  padding: 1em;
+  border-bottom: 1px solid #ccc;
+}
+
+.full-width {
+  width: 100vw; /* 100% of the viewport width */
+  margin: 0; /* remove default margins */
+  padding: 0; /* optional: remove padding */
+}
+
+.link-button {
+  display: inline-block;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+  background-color: grey;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.2s ease;
+  margin-right: 1em;
+  text-decoration: none;
+}
+
+.link-button:hover {
+  background-color: #0056b3;
+}
+
+.link-button:active {
+  background-color: #004999;
+}
+
+.search-input {
+  padding: 0.4rem 0.75rem; /* Match padding of nav-button for vertical alignment */
+  font-size: 0.85rem; /* Match font-size of nav-button */
+  border: 1px solid #ccc; /* A subtle border */
+  border-radius: 6px; /* Match border-radius of buttons */
+  flex-grow: 1; /* Allows the input to take available space */
+  min-width: 120px; /* Ensure it doesn't become too small */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  margin-right: 1em; /* Space between input and button */
+}
+
+/* Styles for the search button */
+.search-button {
+  /* Inherit these directly from .nav-button for consistency */
+  display: inline-block;
+  padding: 0.4rem 0.75rem; /* Crucial: Match nav-button's padding */
+  font-size: 0.85rem; /* Crucial: Match nav-button's font-size */
+  font-weight: 600;
+  color: white;
+  background-color: grey; /* Match nav-button's background color */
+  border: none;
+  border-radius: 6px; /* Match nav-button's border-radius */
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.2s ease;
+  white-space: nowrap; /* Prevent text from wrapping if button is small */
+  margin-right: 1em; /* Space between input and button */
+}
+
+.search-button:hover {
+  background-color: #555; /* Slightly darker grey on hover */
+}
+
+.header-button {
+  display: inline-block;
+  width: 10%;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+  background-color: grey;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.2s ease;
+  margin: 0 1em;
+}
+
+.header-button:hover {
+  background-color: #0056b3;
+}
+
+.header-button:active {
+  background-color: #004999;
+}
+
+.header-button:disabled {
+  background-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}

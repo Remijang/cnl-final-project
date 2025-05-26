@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import "../css/Header.css";
 
 const Header = ({ token, onLogout }) => {
   const [searchInput, setSearchInput] = useState("");
@@ -14,51 +15,51 @@ const Header = ({ token, onLogout }) => {
   };
 
   return (
-    <div
-      style={{
-        position: "sticky", // 讓他在畫面上方固定
-        top: 0,
-        zIndex: 1000,
-        backgroundColor: "#f0f0f0",
-        padding: "1em",
-        borderBottom: "1px solid #ccc",
-      }}
-    >
+    <div className="header">
       <h2 style={{ display: "inline", marginRight: "1em" }}>🗓️ Calendar App</h2>
-      <Link to="/" style={{ marginRight: "1em" }}>
+      <Link to="/" className="link-button">
         Dashboard
       </Link>
-      <form onSubmit={handleSearch} style={{ display: "inline" }}>
+
+      <Link to="/polls" className="link-button">
+        Polls
+      </Link>
+
+      <Link to="/groups" className="link-button">
+        Groups
+      </Link>
+
+      <Link to="/profile" style={{ marginRight: "1em" }}>
+        Profile
+      </Link>
+
+      <form
+        onSubmit={handleSearch}
+        style={{ display: "inline", margin: "0em" }}
+      >
         <input
           type="text"
           placeholder="搜尋使用者"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          style={{ marginLeft: "1em" }}
+          className="search-input"
         />
-        <button type="submit">搜尋</button>
+        <button type="submit" className="search-button">
+          Search
+        </button>
       </form>
 
-      <Link to="/polls" style={{ marginRight: "1em" }}>
-        Polls
-      </Link>
-
-      <Link to="/groups" style={{ marginRight: "1em" }}>
-        Groups
-      </Link>
-      <Link to="/profile" style={{ marginRight: "1em" }}>
-        Profile
-      </Link>
       {token ? (
-        <button onClick={onLogout} style={{ float: "right" }}>
+        <button onClick={onLogout} className="link-button">
           Logout
         </button>
       ) : (
         <>
-          <Link to="/login" style={{ float: "right", marginLeft: "1em" }}>
+          <Link to="/login" className="link-button">
             Login
           </Link>
-          <Link to="/register" style={{ float: "right" }}>
+
+          <Link to="/register" className="link-button">
             Register
           </Link>
         </>
