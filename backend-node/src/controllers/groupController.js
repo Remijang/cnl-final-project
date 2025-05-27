@@ -39,7 +39,7 @@ exports.getAllGroup = async (req, res) => {
 // Add a user to a group (only owner can add)
 exports.addGroupUser = async (req, res) => {
   const { groupId } = req.params;
-  const { addUserId } = req.body;
+  const { addUserName } = req.body;
   const userId = req.user.id;
   try {
     // Check ownership
@@ -49,6 +49,21 @@ exports.addGroupUser = async (req, res) => {
     );
     if (!group.rows.length || group.rows[0].owner_id !== userId) {
       return res.status(403).json({ error: "Permission denied" });
+    }
+    // Check user exist
+    const addUserId = await pool.query("SELECT id FROM users WHERE name = $1", [
+      addUserName,
+    ]);
+    if (!user.rows.length) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    // Check user in group
+    const exist = await pool.query(
+      "SELECT 1 FROM group_members WHERE group_id = $1, user_id = $2",
+      [groupId, addUserId]
+    );
+    if (exist.rows.length) {
+      return res.status(409).json({ error: "User already in this group" });
     }
     // Add member
     await pool.query(
@@ -64,7 +79,7 @@ exports.addGroupUser = async (req, res) => {
 // Remove a user from a group (only owner can remove)
 exports.removeGroupUser = async (req, res) => {
   const { groupId } = req.params;
-  const { removeUserId } = req.body;
+  const { removeUserName } = req.body;
   const userId = req.user.id;
   try {
     // Check ownership
@@ -74,6 +89,22 @@ exports.removeGroupUser = async (req, res) => {
     );
     if (!group.rows.length || group.rows[0].owner_id !== userId) {
       return res.status(403).json({ error: "Permission denied" });
+    }
+    // Check user exist
+    const removeUserId = await pool.query(
+      "SELECT id FROM users WHERE name = $1",
+      [removeUserName]
+    );
+    if (!user.rows.length) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    // Check user in group
+    const exist = await pool.query(
+      "SELECT 1 FROM group_members WHERE group_id = $1, user_id = $2",
+      [groupId, removeUserId]
+    );
+    if (!exist.rows.length) {
+      return res.status(404).json({ error: "User not in group" });
     }
     // Remove member
     await pool.query(
