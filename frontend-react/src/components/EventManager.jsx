@@ -63,24 +63,45 @@ const EventManager = ({ token, calendar_id = 1 }) => {
   }, [token]);
 
   return (
-    <div>
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Title"
-      />
-      <input
-        type="datetime-local"
-        value={startTime}
-        onChange={(e) => setStartTime(e.target.value)}
-      />
-      <input
-        type="datetime-local"
-        value={endTime}
-        onChange={(e) => setEndTime(e.target.value)}
-      />
-      <button onClick={handleCreateEvent}>Create Event</button>
+    <div className="flex flex-col space-y-4 max-w-md mb-6">
+      <div className="flex items-center space-x-2">
+        <label className="font-bold">Title:</label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter title of event"
+          className="flex-1 p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <label className="font-bold">Start time:</label>
+        <input
+          type="datetime-local"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+          className="flex-1 p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <label className="font-bold">End time:</label>
+        <input
+          type="datetime-local"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+          className="flex-1 p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <button
+        onClick={handleCreateEvent}
+        className="bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-700 transition mx-auto w-auto"
+      >
+        Create Event
+      </button>
+
       <MergedCalendar
         token={token}
         myCalendars={[]}

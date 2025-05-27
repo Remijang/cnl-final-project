@@ -14,7 +14,7 @@ const CalendarEditor = ({ onSave, initialValue }) => {
     <form onSubmit={handleSubmit}>
       <input
         type="text"
-        placeholder="Name of the Calendar"
+        placeholder="Enter name of calendar"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         className="search-input"
