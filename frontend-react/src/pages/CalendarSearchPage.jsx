@@ -83,7 +83,7 @@ const CalendarSearchPage = ({ token }) => {
 
   return (
     <div style={{ padding: "1em" }}>
-      <h2>使用者「{username}」的公開行事曆</h2>
+      <h2>Public Calenar of {username}</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
       {results.map((cal) => (
         <div

@@ -3,7 +3,7 @@ import React from "react";
 const AvailabilitySelector = ({ day, timeSlots, selected, onChange }) => {
   return (
     <div>
-      <h3>{day} 可用時段</h3>
+      <h3>{day} Available Time</h3>
       {timeSlots.map((slot) => (
         <label key={slot.id} style={{ marginRight: "10px" }}>
           <input

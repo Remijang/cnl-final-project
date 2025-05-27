@@ -40,16 +40,16 @@ const CalendarDetailPage = () => {
   }, [token, calendarId]);
 
   if (error) return <div className="error-message">{error}</div>;
-  if (!calendarDetails) return <div className="loading">載入中...</div>;
+  if (!calendarDetails) return <div className="loading">Loading...</div>;
 
   return (
     <div className="calendar-detail-container">
       <header className="calendar-header">
         <h1>{calendarDetails.title}</h1>
         <div className="meta-info">
-          <span>擁有者：{calendarDetails.owner?.name || "未知"}</span>
+          <span>Owner:{calendarDetails.owner?.name || "未知"}</span>
           <span>
-            最後更新：{new Date(calendarDetails.updated_at).toLocaleString()}
+            Last update:{new Date(calendarDetails.updated_at).toLocaleString()}
           </span>
         </div>
       </header>

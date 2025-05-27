@@ -100,9 +100,9 @@ const MergedCalendar = ({
       >
         <thead>
           <tr>
-            <th>事件標題</th>
-            <th>時間</th>
-            <th>行事曆</th>
+            <th>Event Title</th>
+            <th>Time</th>
+            <th>Calendar</th>
           </tr>
         </thead>
         <tbody>
