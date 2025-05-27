@@ -87,6 +87,7 @@ const MergedCalendar = ({
         <Calendar
           value={selectedDate}
           onChange={setSelectedDate}
+          locale={"en"}
           tileContent={({ date, view }) =>
             view === "month" ? renderEventsOnDate(date) : null
           }
