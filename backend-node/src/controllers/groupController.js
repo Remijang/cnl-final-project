@@ -54,13 +54,13 @@ exports.addGroupUser = async (req, res) => {
     const addUserId = await pool.query("SELECT id FROM users WHERE name = $1", [
       addUserName,
     ]);
-    if (!user.rows.length) {
+    if (!addUserId.rows.length) {
       return res.status(404).json({ error: "User not found" });
     }
     // Check user in group
     const exist = await pool.query(
-      "SELECT 1 FROM group_members WHERE group_id = $1, user_id = $2",
-      [groupId, addUserId]
+      "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2",
+      [groupId, addUserId.rows[0]]
     );
     if (exist.rows.length) {
       return res.status(409).json({ error: "User already in this group" });
@@ -95,13 +95,13 @@ exports.removeGroupUser = async (req, res) => {
       "SELECT id FROM users WHERE name = $1",
       [removeUserName]
     );
-    if (!user.rows.length) {
+    if (!removeUserId.rows.length) {
       return res.status(404).json({ error: "User not found" });
     }
     // Check user in group
     const exist = await pool.query(
-      "SELECT 1 FROM group_members WHERE group_id = $1, user_id = $2",
-      [groupId, removeUserId]
+      "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2",
+      [groupId, removeUserId.rows[0]]
     );
     if (!exist.rows.length) {
       return res.status(404).json({ error: "User not in group" });
