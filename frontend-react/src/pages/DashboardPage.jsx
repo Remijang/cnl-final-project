@@ -28,7 +28,10 @@ const DashboardPage = () => {
     setMessage({ type: "", text: "" }); // Clear messages on new fetch
     if (!token) {
       // This case should be handled by the useEffect redirect, but good for defensive coding
-      setMessage({ type: "error", text: "認證令牌遺失。請重新登入。" });
+      setMessage({
+        type: "error",
+        text: "Authentication token missing. Please log in again.",
+      });
       return;
     }
     try {
@@ -43,10 +46,10 @@ const DashboardPage = () => {
       );
       setSubscribedOnly(subOnly);
     } catch (err) {
-      console.error("載入行事曆失敗:", err);
+      console.error("Failed to load calendars:", err);
       setMessage({
         type: "error",
-        text: `載入行事曆失敗：${err.message || "未知錯誤"}`,
+        text: `Failed to load calendars: ${err.message || "Unknown error"}`,
       });
     }
   }, [token]);
@@ -73,13 +76,16 @@ const DashboardPage = () => {
       if (shared) {
         await toggleVisibility(token, newCalendar.id, true);
       }
-      setMessage({ type: "success", text: `行事曆 "${title}" 建立成功！` });
+      setMessage({
+        type: "success",
+        text: `Calendar "${title}" created successfully!`,
+      });
       await loadCalendars(); // Reload all calendars to show the new one
     } catch (err) {
-      console.error("建立行事曆失敗:", err);
+      console.error("Failed to create calendar:", err);
       setMessage({
         type: "error",
-        text: `建立行事曆失敗：${err.message || "未知錯誤"}`,
+        text: `Failed to create calendar: ${err.message || "Unknown error"}`,
       });
     }
   };
@@ -113,9 +119,9 @@ const DashboardPage = () => {
               }}
               className="block w-full sm:w-auto px-3 py-2 bg-indigo-50 border border-indigo-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"
             >
-              <option value="subscribed">Subscribed Calendar</option>
+              <option value="subscribed">Subscribed Calendars</option>
               <option value="merged">Aggregated Calendar</option>
-              <option value="mine">My Calendar</option>
+              <option value="mine">My Calendars</option>
             </select>
           </div>
         </div>
@@ -140,7 +146,7 @@ const DashboardPage = () => {
             {/* My Calendars List and Create New Calendar */}
             <div className="bg-gray-50 p-6 rounded-lg shadow-inner">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                My Calendar
+                My Calendars
               </h2>
               <CalendarList // Using actual CalendarList
                 calendars={myCalendars}
@@ -179,7 +185,7 @@ const DashboardPage = () => {
         ) : viewMode === "subscribed" ? (
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Subscribed Calendar
+              Subscribed Calendars
             </h2>
             <SubscribedCalendarView
               subscribedCalendars={subscribedOnly}

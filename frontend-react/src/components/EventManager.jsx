@@ -27,7 +27,7 @@ const EventManager = ({ token, calendar_id }) => {
     if (!token || !calendar_id) {
       setMessage({
         type: "error",
-        text: "缺少認證令牌或日曆ID，無法載入事件。",
+        text: "Missing authentication token or calendar ID, unable to load events.",
       });
       return;
     }
@@ -35,13 +35,16 @@ const EventManager = ({ token, calendar_id }) => {
       const data = await getEventsByCalendar(token, calendar_id);
       setEvents(data);
       if (data.length === 0) {
-        setMessage({ type: "info", text: "此日曆目前沒有事件。" });
+        setMessage({
+          type: "info",
+          text: "This calendar currently has no events.",
+        });
       }
     } catch (err) {
-      console.error("載入事件失敗", err);
+      console.error("Failed to load events", err);
       setMessage({
         type: "error",
-        text: `載入事件失敗：${err.message || "未知錯誤"}`,
+        text: `Failed to load events: ${err.message || "Unknown error"}`,
       });
     }
   }, [token, calendar_id]);
@@ -54,7 +57,7 @@ const EventManager = ({ token, calendar_id }) => {
       const data = await getUserCalendar(token);
       setCalendars(data);
     } catch (err) {
-      console.error("載入日曆失敗", err);
+      console.error("Failed to load calendars", err);
       // No specific message here as it's a secondary fetch
     }
   }, [token]);
@@ -62,11 +65,14 @@ const EventManager = ({ token, calendar_id }) => {
   const handleCreateEvent = async () => {
     setMessage({ type: "", text: "" }); // Clear previous messages
     if (!title.trim() || !startTime || !endTime) {
-      setMessage({ type: "error", text: "請填寫所有事件欄位。" });
+      setMessage({ type: "error", text: "Please fill in all event fields." });
       return;
     }
     if (new Date(startTime) >= new Date(endTime)) {
-      setMessage({ type: "error", text: "開始時間必須早於結束時間。" });
+      setMessage({
+        type: "error",
+        text: "Start time must be earlier than end time.",
+      });
       return;
     }
 
@@ -79,16 +85,19 @@ const EventManager = ({ token, calendar_id }) => {
         start_time: toUTC(startTime),
         end_time: toUTC(endTime),
       });
-      setMessage({ type: "success", text: `事件 "${title}" 建立成功！` });
+      setMessage({
+        type: "success",
+        text: `Event "${title}" created successfully!`,
+      });
       setTitle("");
       setStartTime("");
       setEndTime("");
       fetchEvents(); // Refresh events list
     } catch (err) {
-      console.error("建立事件失敗", err);
+      console.error("Failed to create event", err);
       setMessage({
         type: "error",
-        text: `建立事件失敗：${err.message || "未知錯誤"}`,
+        text: `Failed to create event: ${err.message || "Unknown error"}`,
       });
     }
   };
@@ -97,13 +106,13 @@ const EventManager = ({ token, calendar_id }) => {
     setMessage({ type: "", text: "" }); // Clear previous messages
     try {
       await deleteEvent(token, eventId);
-      setMessage({ type: "success", text: "事件已成功刪除！" });
+      setMessage({ type: "success", text: "Event deleted successfully!" });
       fetchEvents(); // Refresh events list
     } catch (err) {
-      console.error("刪除事件失敗", err);
+      console.error("Failed to delete event", err);
       setMessage({
         type: "error",
-        text: `刪除事件失敗：${err.message || "未知錯誤"}`,
+        text: `Failed to delete event: ${err.message || "Unknown error"}`,
       });
     }
   };
@@ -113,7 +122,10 @@ const EventManager = ({ token, calendar_id }) => {
       fetchEvents();
     } else {
       setEvents([]); // Clear events if no token or calendar_id
-      setMessage({ type: "info", text: "請選擇一個日曆來管理事件。" });
+      setMessage({
+        type: "info",
+        text: "Please select a calendar to manage events.",
+      });
     }
   }, [token, calendar_id, fetchEvents]); // Added fetchEvents to dependencies
 
@@ -143,21 +155,23 @@ const EventManager = ({ token, calendar_id }) => {
 
       {/* Create Event Form */}
       <div className="bg-gray-50 p-6 rounded-lg shadow-inner">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">建立新事件</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">
+          Create New Event
+        </h3>
         <div className="flex flex-col space-y-4">
           <div>
             <label
               htmlFor="event-title"
               className="block text-sm font-bold text-gray-700 mb-1"
             >
-              標題:
+              Title:
             </label>
             <input
               id="event-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="輸入事件標題"
+              placeholder="Enter event title"
               className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
             />
           </div>
@@ -167,7 +181,7 @@ const EventManager = ({ token, calendar_id }) => {
               htmlFor="start-time"
               className="block text-sm font-bold text-gray-700 mb-1"
             >
-              開始時間:
+              Start Time:
             </label>
             <input
               id="start-time"
@@ -183,7 +197,7 @@ const EventManager = ({ token, calendar_id }) => {
               htmlFor="end-time"
               className="block text-sm font-bold text-gray-700 mb-1"
             >
-              結束時間:
+              End Time:
             </label>
             <input
               id="end-time"
@@ -198,16 +212,18 @@ const EventManager = ({ token, calendar_id }) => {
             onClick={handleCreateEvent}
             className="bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-700 transition duration-200 shadow-md self-center w-full sm:w-auto"
           >
-            建立事件
+            Create Event
           </button>
         </div>
       </div>
 
       {/* Events List */}
       <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">事件列表</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Event List</h3>
         {events.length === 0 && message.type !== "error" ? (
-          <p className="text-gray-600">此日曆目前沒有事件。</p>
+          <p className="text-gray-600">
+            This calendar currently has no events.
+          </p>
         ) : (
           <ul className="space-y-3">
             {events.map((event) => (
@@ -218,15 +234,30 @@ const EventManager = ({ token, calendar_id }) => {
                 <div>
                   <p className="font-semibold text-gray-800">{event.title}</p>
                   <p className="text-sm text-gray-600">
-                    {new Date(event.start_time).toLocaleString()} -{" "}
-                    {new Date(event.end_time).toLocaleString()}
+                    {new Date(event.start_time).toLocaleString("en-US", {
+                      year: "numeric",
+                      month: "numeric",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true, // Use 12-hour format with AM/PM
+                    })}{" "}
+                    -{" "}
+                    {new Date(event.end_time).toLocaleString("en-US", {
+                      year: "numeric",
+                      month: "numeric",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true, // Use 12-hour format with AM/PM
+                    })}
                   </p>
                 </div>
                 <button
                   onClick={() => handleDeleteEvent(event.id)}
                   className="px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition duration-200 shadow-sm"
                 >
-                  刪除
+                  Delete
                 </button>
               </li>
             ))}

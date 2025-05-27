@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom"; // Import useNavigate
 import {
   getVisibleCalendarByUsername,
   getSubscribedCalendars,
@@ -20,13 +20,32 @@ const CalendarSearchPage = ({ token }) => {
   const [expandedMap, setExpandedMap] = useState({});
   const [message, setMessage] = useState({ type: "", text: "" }); // State for custom messages
 
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  // Effect for redirecting if no token is present
+  useEffect(() => {
+    if (!token) {
+      setMessage({
+        type: "error",
+        text: "Login required to view calendars. Redirecting to login...",
+      });
+      const timer = setTimeout(() => navigate("/login"), 1500); // Redirect after 1.5 seconds
+      return () => clearTimeout(timer); // Clean up the timer
+    }
+  }, [token, navigate]); // Dependencies: token and navigate
+
   const fetchCalendars = useCallback(async () => {
     setError("");
     setMessage({ type: "", text: "" }); // Clear messages on new fetch
+
+    // The token check for redirect is now handled by the useEffect above.
+    // This `if` block can still be here as a fallback or for specific messages.
     if (!token || !username) {
-      // This scenario should ideally be handled by a redirect in parent component if login is required
-      setError("認證令牌或使用者名稱遺失。");
-      setMessage({ type: "error", text: "請先登入或提供使用者名稱。" });
+      setError("Authentication token or username is missing.");
+      setMessage({
+        type: "error",
+        text: "Please log in or provide a username.",
+      });
       return;
     }
     try {
@@ -36,37 +55,62 @@ const CalendarSearchPage = ({ token }) => {
       if (data.length === 0) {
         setMessage({
           type: "info",
-          text: "找不到該使用者，或該使用者沒有公開行事曆。",
+          text: "User not found, or user has no public calendars.",
         });
       }
     } catch (err) {
-      console.error("查詢失敗", err);
-      setError("找不到使用者，或該使用者沒有公開行事曆");
+      console.error("Query failed", err);
+      setError("User not found, or user has no public calendars");
       setMessage({
         type: "error",
-        text: "查詢失敗：找不到使用者，或該使用者沒有公開行事曆。",
+        text: `Query failed: ${
+          err.message || "Unknown error"
+        }. User not found, or user has no public calendars.`,
       });
+      // If fetching fails due to authentication, redirect
+      if (err.response?.status === 401) {
+        // Common status for unauthorized
+        setMessage({
+          type: "error",
+          text: "Your session has expired. Please log in again.",
+        });
+        setTimeout(() => navigate("/login"), 1500);
+      }
     }
-  }, [token, username]);
+  }, [token, username, navigate]); // Add navigate to dependencies
 
   useEffect(() => {
-    fetchCalendars();
-  }, [fetchCalendars]);
+    // Only fetch if a token exists. If not, the useEffect above will redirect.
+    if (token) {
+      fetchCalendars();
+    }
+  }, [fetchCalendars, token]); // Add token to dependencies
 
   useEffect(() => {
     const setInitIds = async () => {
-      if (!token) return; // Only fetch if token exists
+      if (!token) return; // Only fetch if token exists (redundant due to initial check, but harmless)
       try {
         const subscribedCalendars = await getSubscribedCalendars(token);
         const ids = subscribedCalendars.map((c) => c.id);
         setSubscribedIds(ids);
       } catch (err) {
         console.error("Error fetching subscribed calendars: ", err);
-        setMessage({ type: "error", text: "無法載入已訂閱的行事曆資訊。" });
+        setMessage({
+          type: "error",
+          text: "Unable to load subscribed calendar information.",
+        });
+        // If fetching subscribed calendars fails due to authentication, redirect
+        if (err.response?.status === 401) {
+          setMessage({
+            type: "error",
+            text: "Your session has expired. Please log in again.",
+          });
+          setTimeout(() => navigate("/login"), 1500);
+        }
       }
     };
     setInitIds();
-  }, [token]);
+  }, [token, navigate]); // Add navigate to dependencies
 
   const handleToggleExpand = (calendarId) => {
     setExpandedMap((prev) => ({
@@ -78,31 +122,63 @@ const CalendarSearchPage = ({ token }) => {
   const handleSubscribe = async (calendarId) => {
     setMessage({ type: "", text: "" }); // Clear previous messages
     if (!token) {
-      setMessage({ type: "error", text: "請先登入才能訂閱或取消訂閱。" });
+      setMessage({
+        type: "error",
+        text: "Please log in to subscribe or unsubscribe. Redirecting...",
+      });
+      setTimeout(() => navigate("/login"), 1500); // Redirect if no token on action
       return;
     }
     try {
       if (subscribedIds.includes(calendarId)) {
         await unsubscribeCalendar(token, calendarId);
         setSubscribedIds((prev) => prev.filter((id) => id !== calendarId));
-        setMessage({ type: "success", text: "已取消訂閱。" });
+        setMessage({ type: "success", text: "Unsubscribed successfully." });
       } else {
         await subscribeCalendar(token, calendarId);
         setSubscribedIds((prev) => [...prev, calendarId]);
-        setMessage({ type: "success", text: "訂閱成功！" });
+        setMessage({ type: "success", text: "Subscribed successfully!" });
       }
     } catch (err) {
-      console.error("訂閱操作失敗", err);
+      console.error("Subscription operation failed", err);
       setMessage({
         type: "error",
-        text: `訂閱/取消失敗：${err.message || "未知錯誤"}`,
+        text: `Subscription/Unsubscription failed: ${
+          err.message || "Unknown error"
+        }`,
       });
+      // If subscription action fails due to authentication, redirect
+      if (err.response?.status === 401) {
+        setMessage({
+          type: "error",
+          text: "Your session has expired. Please log in again.",
+        });
+        setTimeout(() => navigate("/login"), 1500);
+      }
     }
   };
 
+  // If there's no token, we render nothing or a simple message while redirecting.
+  // The `useEffect` already handles the `Maps` call.
+  if (!token) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        {message.text && (
+          <div
+            className={`p-3 rounded-md text-lg font-semibold ${
+              message.type === "error" ? "bg-red-100 text-red-700" : ""
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 font-sans">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-10">
+      <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-10">
         <h1 className="text-4xl font-extrabold text-gray-800 mb-8 text-center tracking-tight">
           Public Calendars of {username}
         </h1>
@@ -124,7 +200,9 @@ const CalendarSearchPage = ({ token }) => {
         {error && <p className="text-red-600 text-center mb-4">{error}</p>}
 
         {results.length === 0 && !error && !message.text && (
-          <p className="text-gray-600 text-center">正在載入公開行事曆...</p>
+          <p className="text-gray-600 text-center">
+            Loading public calendars...
+          </p>
         )}
 
         <div className="space-y-6">
@@ -144,7 +222,7 @@ const CalendarSearchPage = ({ token }) => {
                   onClick={() => handleToggleExpand(cal.id)}
                   className="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition duration-200 shadow-md"
                 >
-                  {expandedMap[cal.id] ? "隱藏事件" : "顯示事件"}
+                  {expandedMap[cal.id] ? "Hide Events" : "Show Events"}
                 </button>
                 <button
                   onClick={() => handleSubscribe(cal.id)}
@@ -154,7 +232,7 @@ const CalendarSearchPage = ({ token }) => {
                       : "bg-green-500 hover:bg-green-600 text-white"
                   }`}
                 >
-                  {subscribedIds.includes(cal.id) ? "取消訂閱" : "訂閱"}
+                  {subscribedIds.includes(cal.id) ? "Unsubscribe" : "Subscribe"}
                 </button>
               </div>
               {expandedMap[cal.id] && (

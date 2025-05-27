@@ -20,9 +20,12 @@ const SubscribedCalendarView = ({
           const events = await getEventsByCalendar(token, cal.id);
           allEvents[cal.id] = events;
         } catch (err) {
-          console.error(`讀取日曆 ${cal.id} 失敗`, err);
+          console.error(`Failed to read calendar ${cal.id}`, err);
           allEvents[cal.id] = [];
-          setMessage({ type: "error", text: `讀取日曆 ${cal.title} 失敗。` });
+          setMessage({
+            type: "error",
+            text: `Failed to read calendar ${cal.title}.`,
+          });
         }
       }
       setCalendarEvents(allEvents);
@@ -33,7 +36,10 @@ const SubscribedCalendarView = ({
     } else if (subscribedCalendars.length === 0) {
       // If there are no subscribed calendars, clear any previous events and messages
       setCalendarEvents({});
-      setMessage({ type: "info", text: "您尚未訂閱任何行事曆。" });
+      setMessage({
+        type: "info",
+        text: "You haven't subscribed to any calendars yet.",
+      });
     }
   }, [token, subscribedCalendars]);
 
@@ -43,16 +49,16 @@ const SubscribedCalendarView = ({
       await unsubscribeCalendar(token, calendarId);
       setMessage({
         type: "success",
-        text: `已成功取消訂閱 ${calendarTitle}。`,
+        text: `Successfully unsubscribed from ${calendarTitle}.`,
       });
       if (onUnsubscribeSuccess) {
         onUnsubscribeSuccess(); // Trigger parent to re-fetch calendar list
       }
     } catch (err) {
-      console.error("取消訂閱失敗", err);
+      console.error("Unsubscribe failed", err);
       setMessage({
         type: "error",
-        text: `取消訂閱失敗：${err.message || "未知錯誤"}`,
+        text: `Unsubscribe failed: ${err.message || "Unknown error"}`,
       });
     }
   };
@@ -78,7 +84,9 @@ const SubscribedCalendarView = ({
           </div>
         )}
         {subscribedCalendars.length === 0 && message.type !== "error" ? (
-          <p className="text-gray-600 text-center">您尚未訂閱任何行事曆。</p>
+          <p className="text-gray-600 text-center">
+            You haven't subscribed to any calendars yet.
+          </p>
         ) : (
           <div className="space-y-6">
             {subscribedCalendars.map((cal) => (
@@ -96,7 +104,7 @@ const SubscribedCalendarView = ({
                   onClick={() => handleUnsubscribe(cal.id, cal.title)}
                   className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200 shadow-md"
                 >
-                  取消訂閱
+                  Unsubscribe
                 </button>
                 <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
                   <MergedCalendar

@@ -25,7 +25,10 @@ const GroupsPage = ({ token }) => {
   useEffect(() => {
     // Redirect to login page if no token is found
     if (!token) {
-      setMessage({ type: "error", text: "需要登入才能查詢。請先登入。" });
+      setMessage({
+        type: "error",
+        text: "Login required to query. Please log in first.",
+      });
       setTimeout(() => navigate("/login"), 1500);
       return; // Stop further execution of this effect
     }
@@ -38,7 +41,7 @@ const GroupsPage = ({ token }) => {
     if (!dateInput || !/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
       setMessage({
         type: "error",
-        text: "日期格式不正確，請使用YYYY-MM-DD 格式。",
+        text: "Incorrect date format. Please use YYYY-MM-DD format.",
       });
       return;
     }
@@ -56,13 +59,18 @@ const GroupsPage = ({ token }) => {
         dateInput
       );
       setAvailabilityData(data);
-      setMessage({ type: "success", text: "空閒時段查詢成功！" });
+      setMessage({
+        type: "success",
+        text: "Free time slots queried successfully!",
+      });
     } catch (err) {
-      console.error("查詢群組空閒時段失敗：", err);
-      setAvailabilityError(err.message || "無法取得空閒時段資訊");
+      console.error("Failed to query group free time slots:", err);
+      setAvailabilityError(
+        err.message || "Unable to get free time slot information"
+      );
       setMessage({
         type: "error",
-        text: `查詢失敗：${err.message || "未知錯誤"}`,
+        text: `Query failed: ${err.message || "Unknown error"}`,
       });
       setAvailabilityData(null);
     } finally {
@@ -80,7 +88,7 @@ const GroupsPage = ({ token }) => {
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 font-sans">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-10">
         <h1 className="text-4xl font-extrabold text-gray-800 mb-8 text-center tracking-tight">
-          群組管理
+          Group Management
         </h1>
 
         {/* Message Box */}
@@ -113,11 +121,11 @@ const GroupsPage = ({ token }) => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                輸入日期
+                Enter Date
               </h3>
               <p className="text-gray-600 mb-4">
-                請輸入查詢群組 "{selectedGroupForDate?.name}" 空閒時段的日期
-                (YYYY-MM-DD)：
+                Please enter the date (YYYY-MM-DD) to query free time slots for
+                group "{selectedGroupForDate?.name}":
               </p>
               <input
                 type="date" // Use type="date" for better mobile experience
@@ -130,13 +138,13 @@ const GroupsPage = ({ token }) => {
                   onClick={handleDateInputCancel}
                   className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
                 >
-                  取消
+                  Cancel
                 </button>
                 <button
                   onClick={handleDateInputConfirm}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200"
                 >
-                  確認
+                  Confirm
                 </button>
               </div>
             </div>
@@ -146,36 +154,39 @@ const GroupsPage = ({ token }) => {
         {token && currentGroupForAvailability && (
           <div className="mt-6 bg-white p-6 rounded-lg shadow-md border border-gray-200">
             <h3 className="text-xl font-bold text-gray-800 mb-4">
-              群組 "{currentGroupForAvailability.name}" (ID:{" "}
-              {currentGroupForAvailability.id}) 於{" "}
-              {currentGroupForAvailability.day} 的空閒時段
+              Free time slots for group "{currentGroupForAvailability.name}"
+              (ID: {currentGroupForAvailability.id}) on{" "}
+              {currentGroupForAvailability.day}
             </h3>
             {isLoadingAvailability && (
-              <p className="text-blue-600 font-medium">載入空閒時段中...</p>
+              <p className="text-blue-600 font-medium">
+                Loading free time slots...
+              </p>
             )}
             {availabilityError && (
               <p className="text-red-600 font-medium">
-                錯誤：{availabilityError}
+                Error: {availabilityError}
               </p>
             )}
             {availabilityData && (
               <div>
                 <h4 className="text-lg font-semibold text-gray-700 mt-4 mb-2">
-                  查詢結果：
+                  Query Results:
                 </h4>
                 {Array.isArray(availabilityData) &&
                 availabilityData.length > 0 ? (
                   <ul className="list-disc list-inside space-y-1 text-gray-800">
                     {availabilityData.map((slot, index) => (
                       <li key={index}>
-                        成員 ID: {slot.user_id} | 日期: {slot.available_date} |
-                        時間: {slot.start_time} - {slot.end_time}
+                        Member ID: {slot.user_id} | Date: {slot.available_date}{" "}
+                        | Time: {slot.start_time} - {slot.end_time}
                       </li>
                     ))}
                   </ul>
                 ) : (
                   <p className="text-gray-600">
-                    此日期群組成員沒有設定空閒時段，或所有成員皆無空閒。
+                    Group members have no free time slots set for this date, or
+                    all members are unavailable.
                   </p>
                 )}
               </div>
@@ -186,7 +197,8 @@ const GroupsPage = ({ token }) => {
               currentGroupForAvailability &&
               !availabilityData && (
                 <p className="text-gray-600 mt-4">
-                  無法載入空閒時段資訊，或此群組在此日期無人有空。
+                  Unable to load free time slot information, or no one in this
+                  group is available on this date.
                 </p>
               )}
           </div>
@@ -198,7 +210,8 @@ const GroupsPage = ({ token }) => {
           !availabilityError && (
             <div className="mt-6 bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center text-gray-600">
               <p>
-                請在上方群組列表中點擊群組旁的 "查詢空閒時段" 按鈕以載入資訊。
+                Please click the "Check Free Time Slots" button next to a group
+                in the list above to load information.
               </p>
             </div>
           )}

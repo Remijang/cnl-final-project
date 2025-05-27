@@ -12,11 +12,11 @@ const CalendarDetailPage = () => {
   const [calendarDetails, setCalendarDetails] = useState(null);
   const [message, setMessage] = useState({
     type: "info",
-    text: "載入日曆資訊中...",
+    text: "Loading calendar information...",
   }); // State for custom messages
 
   const findCalendar = async () => {
-    setMessage({ type: "info", text: "載入日曆資訊中..." }); // Set loading message
+    setMessage({ type: "info", text: "Loading calendar information..." }); // Set loading message
     try {
       const [ownedCals, subCals] = await Promise.all([
         getUserCalendar(token),
@@ -27,17 +27,20 @@ const CalendarDetailPage = () => {
       const targetCal = allCals.find((cal) => cal.id.toString() === calendarId);
 
       if (!targetCal) {
-        setMessage({ type: "error", text: "日曆不存在或無權限查看。" });
+        setMessage({
+          type: "error",
+          text: "Calendar does not exist or you do not have permission to view it.",
+        });
         setCalendarDetails(null); // Clear details if not found
         return;
       }
       setCalendarDetails(targetCal);
       setMessage({ type: "success", text: "" }); // Clear message on success
     } catch (err) {
-      console.error("取得日曆失敗:", err);
+      console.error("Failed to get calendar:", err);
       setMessage({
         type: "error",
-        text: `取得日曆失敗：${err.message || "未知錯誤"}`,
+        text: `Failed to get calendar: ${err.message || "Unknown error"}`,
       });
       setCalendarDetails(null); // Clear details on error
       if (err.response?.status === 403) {
@@ -51,7 +54,10 @@ const CalendarDetailPage = () => {
     if (token && calendarId) {
       findCalendar();
     } else {
-      setMessage({ type: "error", text: "認證令牌或日曆ID遺失。請先登入。" });
+      setMessage({
+        type: "error",
+        text: "Authentication token or calendar ID is missing. Please log in first.",
+      });
     }
   }, [token, calendarId]); // Removed findCalendar from dependencies to prevent infinite loop
 
@@ -81,9 +87,9 @@ const CalendarDetailPage = () => {
                 {calendarDetails.title}
               </h1>
               <div className="text-sm text-gray-600 space-y-1">
-                <p>擁有者: {calendarDetails.owner?.name || "未知"}</p>
+                <p>Owner: {calendarDetails.owner?.name || "Unknown"}</p>
                 <p>
-                  最後更新:{" "}
+                  Last Updated:{" "}
                   {new Date(calendarDetails.updated_at).toLocaleString()}
                 </p>
               </div>

@@ -100,19 +100,10 @@ const MergedCalendar = ({
           </li>
         ))}
         {hiddenCount > 0 && (
-          <li style={{ color: "blue" }}>+{hiddenCount} 更多</li>
+          <li style={{ color: "blue" }}>+{hiddenCount} more</li>
         )}
       </ul>
     );
-  };
-
-  // Placeholder for handleDeleteEvent as it's not part of MergedCalendar's responsibilities
-  // but was present in the original code snippet.
-  const handleDeleteEvent = (eventId) => {
-    console.warn(
-      `Delete event functionality not implemented in MergedCalendar. Attempted to delete event ID: ${eventId}`
-    );
-    // This function should ideally be passed down from a parent component that manages event deletion.
   };
 
   return (
@@ -121,7 +112,7 @@ const MergedCalendar = ({
         <Calendar
           value={selectedDate}
           onChange={setSelectedDate}
-          locale={"en"} // Set locale for calendar display
+          locale={"en-US"} // Set locale for calendar display
           tileContent={({ date, view }) =>
             view === "month" ? renderEventsOnDate(date) : null
           }
@@ -130,11 +121,16 @@ const MergedCalendar = ({
       </div>
 
       <h3 className="text-center font-bold text-xl text-gray-800 mt-2 mb-4">
-        Events on {selectedDate.toLocaleDateString()}
+        Events on{" "}
+        {selectedDate.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
       </h3>
 
       {selectedEvents.length === 0 ? (
-        <p className="text-center text-gray-600">此日期沒有事件。</p>
+        <p className="text-center text-gray-600">No events on this date.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white border border-gray-200 rounded-lg">
@@ -166,23 +162,32 @@ const MergedCalendar = ({
                   <td className="py-3 px-6 text-left">
                     {new Date(ev.start_time).toDateString() ===
                     new Date(ev.end_time).toDateString()
-                      ? `${new Date(ev.start_time).toLocaleTimeString([], {
+                      ? `${new Date(ev.start_time).toLocaleTimeString("en-US", {
                           hour: "2-digit",
                           minute: "2-digit",
-                        })} - ${new Date(ev.end_time).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}`
-                      : `${new Date(ev.start_time).toLocaleString([], {
+                          hour12: true, // Ensures AM/PM format
+                        })} - ${new Date(ev.end_time).toLocaleTimeString(
+                          "en-US",
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true, // Ensures AM/PM format
+                          }
+                        )}`
+                      : `${new Date(ev.start_time).toLocaleString("en-US", {
                           month: "2-digit",
                           day: "2-digit",
+                          year: "numeric",
                           hour: "2-digit",
                           minute: "2-digit",
-                        })} - ${new Date(ev.end_time).toLocaleString([], {
+                          hour12: true,
+                        })} - ${new Date(ev.end_time).toLocaleString("en-US", {
                           month: "2-digit",
                           day: "2-digit",
+                          year: "numeric",
                           hour: "2-digit",
                           minute: "2-digit",
+                          hour12: true,
                         })}`}
                   </td>
                   <td className="py-3 px-6 text-center">

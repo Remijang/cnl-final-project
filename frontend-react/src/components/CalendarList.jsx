@@ -23,7 +23,7 @@ function CalendarList({ calendars, onSelect, selectedCalendarId }) {
               <span
                 className={cal.visibility ? "text-green-600" : "text-red-600"}
               >
-                {cal.visibility ? "公開" : "私人"}
+                {cal.visibility ? "Public" : "Private"}
               </span>
               )
             </p>

@@ -61,7 +61,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
       setError(err.message || "Failed to fetch groups");
       setMessage({
         type: "error",
-        text: `載入群組失敗：${err.message || "未知錯誤"}`,
+        text: `Failed to load groups: ${err.message || "Unknown error"}`,
       });
       setGroups([]);
     } finally {
@@ -86,7 +86,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
 
   const handleCreateGroupConfirm = async () => {
     if (!newGroupName.trim()) {
-      setMessage({ type: "error", text: "群組名稱不能為空。" });
+      setMessage({ type: "error", text: "Group name cannot be empty." });
       return;
     }
     setShowCreateGroupModal(false);
@@ -95,13 +95,13 @@ const GroupManager = ({ token, onCheckAvailability }) => {
       await createGroup(token, { name: newGroupName.trim() });
       setMessage({
         type: "success",
-        text: `群組 "${newGroupName}" 建立成功！`,
+        text: `Group "${newGroupName}" created successfully!`,
       });
       await fetchGroupsAndMembers(); // Refresh the list
     } catch (err) {
       setMessage({
         type: "error",
-        text: `建立群組失敗：${err.message || "未知錯誤"}`,
+        text: `Failed to create group: ${err.message || "Unknown error"}`,
       });
       setError(err.message || "Failed to create group");
     } finally {
@@ -117,15 +117,15 @@ const GroupManager = ({ token, onCheckAvailability }) => {
 
       setMessage({
         type: "success",
-        text: `群組 "${newGroupName}" 移除成功！`,
+        text: `Group "${groupToRemove.groupName}" removed successfully!`,
       });
       await fetchGroupsAndMembers(); // Refresh the list
     } catch (err) {
       setMessage({
         type: "error",
-        text: `建立群組失敗：${err.message || "未知錯誤"}`,
+        text: `Failed to remove group: ${err.message || "Unknown error"}`,
       });
-      setError(err.message || "Failed to create group");
+      setError(err.message || "Failed to remove group");
     } finally {
       setIsLoading(false);
       setGroupToRemove(null);
@@ -151,7 +151,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
 
   const handleAddUserConfirm = async () => {
     if (!userIdToAdd.trim()) {
-      setMessage({ type: "error", text: "成員 User ID 不能為空。" });
+      setMessage({ type: "error", text: "Member User ID cannot be empty." });
       return;
     }
     setShowAddUserModal(false);
@@ -160,13 +160,13 @@ const GroupManager = ({ token, onCheckAvailability }) => {
       await addGroupUser(token, currentGroupIdForAdd, userIdToAdd.trim());
       setMessage({
         type: "success",
-        text: `成員 ${userIdToAdd} 已新增至群組。`,
+        text: `Member ${userIdToAdd} added to group.`,
       });
       await fetchGroupsAndMembers(); // Refresh the list
     } catch (err) {
       setMessage({
         type: "error",
-        text: `新增成員失敗：${err.message || "未知錯誤"}`,
+        text: `Failed to add member: ${err.message || "Unknown error"}`,
       });
       setError(err.message || "Failed to add user to group");
     } finally {
@@ -198,15 +198,15 @@ const GroupManager = ({ token, onCheckAvailability }) => {
       );
       setMessage({
         type: "success",
-        text: `成員 ${
+        text: `Member ${
           removeConfirmData.userName || removeConfirmData.userIdToRemove
-        } 已從群組移除。`,
+        } removed from group.`,
       });
       await fetchGroupsAndMembers(); // Refresh the list
     } catch (err) {
       setMessage({
         type: "error",
-        text: `移除成員失敗：${err.message || "未知錯誤"}`,
+        text: `Failed to remove member: ${err.message || "Unknown error"}`,
       });
       setError(err.message || "Failed to remove user from group");
     } finally {
@@ -242,35 +242,37 @@ const GroupManager = ({ token, onCheckAvailability }) => {
       )}
 
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">我的群組</h2>
+        <h2 className="text-2xl font-bold text-gray-800">My Groups</h2>
         <button
           onClick={handleCreateGroupClick}
           disabled={isLoading}
           className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? "處理中..." : "建立新群組"}
+          {isLoading ? "Processing..." : "Create New Group"}
         </button>
       </div>
 
       {isLoading && groups.length === 0 && (
-        <p className="text-blue-600 font-medium text-center">載入群組中...</p>
+        <p className="text-blue-600 font-medium text-center">
+          Loading groups...
+        </p>
       )}
       {error && (
         <p className="text-red-600 font-medium text-center">
-          錯誤：{error}{" "}
+          Error: {error}{" "}
           <button
             onClick={fetchGroupsAndMembers}
             disabled={isLoading}
             className="text-blue-600 hover:text-blue-800 font-semibold ml-2"
           >
-            重試
+            Retry
           </button>
         </p>
       )}
 
       {!isLoading && !error && groups.length === 0 && (
         <p className="text-gray-600 text-center">
-          您尚未加入任何群組，或沒有群組可顯示。
+          You haven't joined any groups yet, or there are no groups to display.
         </p>
       )}
 
@@ -285,20 +287,22 @@ const GroupManager = ({ token, onCheckAvailability }) => {
             </h3>
             {group.members[group.members.length - 1].name && (
               <p className="text-sm text-gray-500 mb-4">
-                群組擁有者: {group.members[group.members.length - 1].name}
+                Group Owner: {group.members[group.members.length - 1].name}
               </p>
             )}
 
-            <h4 className="text-lg font-semibold text-gray-700 mb-2">成員:</h4>
+            <h4 className="text-lg font-semibold text-gray-700 mb-2">
+              Members:
+            </h4>
             {group.errorLoadingMembers && (
               <p className="text-orange-600 text-sm mb-2">
-                無法載入此群組的成員列表。
+                Could not load members for this group.
               </p>
             )}
             {(!group.members || group.members.length === 0) &&
               !group.errorLoadingMembers && (
                 <p className="text-gray-600 text-sm mb-2">
-                  此群組目前沒有成員。
+                  This group currently has no members.
                 </p>
               )}
             {group.members && group.members.length > 0 && (
@@ -322,7 +326,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
                       disabled={isLoading}
                       className="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600 transition duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ml-2"
                     >
-                      移除
+                      Remove
                     </button>
                   </li>
                 ))}
@@ -339,7 +343,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
                   disabled={isLoading}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  新增成員
+                  Add Member
                 </button>
                 {/* Add a button for checking availability here, linked to onCheckAvailability prop */}
                 {onCheckAvailability && (
@@ -347,7 +351,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
                     onClick={() => onCheckAvailability(group.id, group.name)}
                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200 shadow-md"
                   >
-                    查詢空閒時段
+                    Check Availability
                   </button>
                 )}
               </div>
@@ -356,7 +360,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
                 disabled={isLoading}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                移除群組
+                Remove Group
               </button>
             </div>
           </div>
@@ -368,11 +372,11 @@ const GroupManager = ({ token, onCheckAvailability }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
-              建立新群組
+              Create New Group
             </h3>
             <input
               type="text"
-              placeholder="群組名稱"
+              placeholder="Group Name"
               value={newGroupName}
               onChange={(e) => setNewGroupName(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
@@ -382,13 +386,13 @@ const GroupManager = ({ token, onCheckAvailability }) => {
                 onClick={handleCreateGroupCancel}
                 className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
               >
-                取消
+                Cancel
               </button>
               <button
                 onClick={handleCreateGroupConfirm}
                 className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition duration-200"
               >
-                建立
+                Create
               </button>
             </div>
           </div>
@@ -400,10 +404,10 @@ const GroupManager = ({ token, onCheckAvailability }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
-              新增成員至群組
+              Add Member to Group
             </h3>
             <p className="text-gray-600 mb-4">
-              請輸入要新增的成員的使用者名稱：
+              Please enter the User ID of the member to add:
             </p>
             <input
               type="text"
@@ -417,13 +421,13 @@ const GroupManager = ({ token, onCheckAvailability }) => {
                 onClick={handleAddUserCancel}
                 className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
               >
-                取消
+                Cancel
               </button>
               <button
                 onClick={handleAddUserConfirm}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200"
               >
-                新增
+                Add
               </button>
             </div>
           </div>
@@ -435,23 +439,24 @@ const GroupManager = ({ token, onCheckAvailability }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
-              確認移除成員
+              Confirm Remove Member
             </h3>
             <p className="text-gray-600 mb-4">
-              確定要從群組移除成員 "{removeConfirmData.userName}"？
+              Are you sure you want to remove member "
+              {removeConfirmData.userName}" from the group?
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={handleRemoveUserCancel}
                 className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
               >
-                取消
+                Cancel
               </button>
               <button
                 onClick={handleRemoveUserConfirm}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200"
               >
-                移除
+                Remove
               </button>
             </div>
           </div>
@@ -463,23 +468,23 @@ const GroupManager = ({ token, onCheckAvailability }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
-              確認移除群組
+              Confirm Remove Group
             </h3>
             <p className="text-gray-600 mb-4">
-              確定要移除群組 "{groupToRemove.groupName}"？
+              Are you sure you want to remove group "{groupToRemove.groupName}"?
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={handleRemoveGroupCancel}
                 className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
               >
-                取消
+                Cancel
               </button>
               <button
                 onClick={handleRemoveGroupConfirm}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200"
               >
-                移除
+                Remove
               </button>
             </div>
           </div>

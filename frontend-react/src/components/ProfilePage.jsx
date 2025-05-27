@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getProfile, updateProfile } from "../services/authService";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "../css/Profile.css";
 
 const ProfilePage = () => {
@@ -13,10 +14,22 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [message, setMessage] = useState({ type: "", text: "" }); // Add message state for consistency
 
-  // 取得使用者資料
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  // Effect to handle initial token check and profile fetch
   useEffect(() => {
-    if (!token) return;
+    // If no token, set an error message and redirect to login after a delay
+    if (!token) {
+      setMessage({
+        type: "error",
+        text: "Login required to view profile. Please log in first.",
+      });
+      // Use a timeout to display the message briefly before redirecting
+      const timer = setTimeout(() => navigate("/login"), 1500);
+      return () => clearTimeout(timer); // Clean up the timer if component unmounts
+    }
 
     const fetchProfile = async () => {
       try {
@@ -29,12 +42,27 @@ const ProfilePage = () => {
         });
         setLoading(false);
       } catch (err) {
-        setError(err.response?.data?.error || "取得資料失敗");
+        // If profile fetch fails (e.g., token invalid/expired), set error message
+        // and redirect to login after clearing the token.
+        console.error("Failed to fetch profile:", err);
+        setError(
+          err.response?.data?.error || "Failed to retrieve profile data."
+        );
+        setMessage({
+          type: "error",
+          text: `Failed to load profile: ${
+            err.response?.data?.error ||
+            "Your session might have expired. Please log in again."
+          }`,
+        });
         setLoading(false);
+        localStorage.removeItem("token"); // Clear invalid token
+        setToken(""); // Update token state to trigger the redirect logic
+        // The `if (!token)` check at the beginning of this `useEffect` will handle the navigation
       }
     };
     fetchProfile();
-  }, [token]);
+  }, [token, navigate]); // `token` and `Maps` are dependencies
 
   const handleChange = (e) => {
     setFormData({
@@ -45,24 +73,64 @@ const ProfilePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!token) return;
     setError(null);
     setSuccessMsg(null);
+    setMessage({ type: "", text: "" }); // Clear previous messages
+
+    if (!token) {
+      // If no token on submit, also initiate redirect
+      setMessage({
+        type: "error",
+        text: "Please log in to update your profile.",
+      });
+      setTimeout(() => navigate("/login"), 1500);
+      return;
+    }
 
     try {
       const updatedProfile = await updateProfile(formData, token);
       setProfile(updatedProfile);
-      setSuccessMsg("個人資料更新成功！");
+      setSuccessMsg("Profile updated successfully!");
+      setMessage({ type: "success", text: "Profile updated successfully!" });
     } catch (err) {
-      const errorMsg = err.response?.data?.error || "更新失敗";
+      const errorMsg = err.response?.data?.error || "Update failed";
       setError(
-        errorMsg.includes("重複") ? "此名稱已被使用，請更換其他名稱" : errorMsg
+        errorMsg.includes("duplicate")
+          ? "This name is already in use, please choose another name"
+          : errorMsg
       );
+      setMessage({
+        type: "error",
+        text: `Profile update failed: ${errorMsg}`,
+      });
+
+      // If update fails due to authentication issue (e.g., 401 Unauthorized), redirect
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        setToken(""); // This will trigger the useEffect to redirect
+        setMessage({
+          type: "error",
+          text: "Your session has expired. Please log in again.",
+        });
+        setTimeout(() => navigate("/login"), 1500);
+      }
     }
   };
 
-  if (loading) return <div className="loading">載入中...</div>;
-  if (!profile) return <div className="error">{error || "使用者不存在"}</div>;
+  // Render loading state until profile data is fetched or redirect is initiated
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-xl text-gray-700">Loading profile...</div>
+      </div>
+    );
+  }
+
+  // If we reach here, it means loading is done and either profile is loaded
+  // or a redirect has already been scheduled by the useEffect.
+  // We can safely assume `profile` is not null if we're rendering the form.
+  // If `!profile` somehow happens after loading and no redirect occurred,
+  // this implies an unexpected state, which might be handled by a more robust error boundary.
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 font-sans">
@@ -71,8 +139,22 @@ const ProfilePage = () => {
           Profile
         </h1>
 
-        {/* Alert Messages */}
-        {error && (
+        {/* Alert Messages (combining error, successMsg, and general message) */}
+        {message.text && (
+          <div
+            className={`p-3 mb-4 rounded-md text-sm text-center ${
+              message.type === "success"
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+            role="alert"
+          >
+            <span className="block sm:inline">{message.text}</span>
+          </div>
+        )}
+
+        {/* The `error` and `successMsg` states can be removed if `message` state is fully used */}
+        {/* {error && (
           <div
             className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative mb-4"
             role="alert"
@@ -87,21 +169,17 @@ const ProfilePage = () => {
           >
             <span className="block sm:inline">{successMsg}</span>
           </div>
-        )}
+        )} */}
 
         <div className="flex flex-col items-center space-y-8 md:flex-row md:items-start md:space-y-0 md:space-x-8">
           {/* Avatar Section */}
           <div className="flex-shrink-0 mb-4 md:mb-0 flex flex-col items-center">
-            {" "}
-            {/* Added flex flex-col items-center here */}
             <img
               src={formData.avatar_url}
-              className="h-24 w-24 rounded-full object-cover border-4 border-white shadow-md ring-2 ring-indigo-500 mb-2" /* Added mb-2 for spacing */
+              className="h-24 w-24 rounded-full object-cover border-4 border-white shadow-md ring-2 ring-indigo-500 mb-2"
+              alt="User Avatar" // Added alt attribute for accessibility
             />
-            <p className="text-sm text-gray-500 text-center">
-              {/* You can display the alt text here, or a custom caption */}
-              使用者頭像
-            </p>
+            <p className="text-sm text-gray-500 text-center">User Avatar</p>
           </div>
 
           {/* Profile Form */}
@@ -112,7 +190,7 @@ const ProfilePage = () => {
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                姓名
+                Name
               </label>
               <input
                 type="text"
@@ -131,7 +209,7 @@ const ProfilePage = () => {
                 htmlFor="bio"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                個人簡介
+                Bio
               </label>
               <textarea
                 id="bio"
@@ -149,7 +227,7 @@ const ProfilePage = () => {
                 htmlFor="avatar_url"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                頭像網址
+                Avatar URL
               </label>
               <input
                 type="url"
@@ -168,7 +246,7 @@ const ProfilePage = () => {
                 type="submit"
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200 ease-in-out transform hover:-translate-y-0.5"
               >
-                更新資料
+                Update Profile
               </button>
             </div>
           </form>
@@ -177,17 +255,17 @@ const ProfilePage = () => {
         {/* Readonly Info */}
         <div className="mt-8 pt-6 border-t border-gray-200 text-gray-600 text-sm leading-relaxed space-y-2">
           <p>
-            <strong>電子郵件:</strong>{" "}
+            <strong>Email:</strong>{" "}
             <span className="font-medium text-gray-800">{profile.email}</span>
           </p>
           <p>
-            <strong>註冊時間:</strong>{" "}
+            <strong>Registered At:</strong>{" "}
             <span className="font-medium text-gray-800">
               {new Date(profile.created_at).toLocaleString()}
             </span>
           </p>
           <p>
-            <strong>最後更新:</strong>{" "}
+            <strong>Last Updated:</strong>{" "}
             <span className="font-medium text-gray-800">
               {new Date(profile.updated_at).toLocaleString()}
             </span>
