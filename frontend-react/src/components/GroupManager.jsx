@@ -64,6 +64,10 @@ const GroupManager = ({ token, onCheckAvailability }) => {
     }
   }, [token]);
 
+  useEffect(() => {
+    fetchGroupsAndMembers();
+  }, []);
+
   // --- Create Group Handlers ---
   const handleCreateGroupClick = () => {
     setNewGroupName("");
@@ -239,7 +243,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
             className="bg-white rounded-lg shadow-md border border-gray-200 p-6 flex flex-col"
           >
             <h3 className="text-xl font-bold text-gray-800 mb-2">
-              {group.name} (ID: {group.id})
+              {group.name}
             </h3>
             {group.owner_id && (
               <p className="text-sm text-gray-500 mb-4">
@@ -267,14 +271,13 @@ const GroupManager = ({ token, onCheckAvailability }) => {
                     className="flex justify-between items-center"
                   >
                     <span>
-                      {user.name || "N/A"} ({user.email || "N/A"}) (ID:{" "}
-                      {user.id})
+                      {user.name || "N/A"} ({user.email || "N/A"})
                     </span>
                     <button
                       onClick={() =>
                         handleRemoveUserClick(
                           group.id,
-                          user.id,
+                          user.name,
                           user.name || user.id
                         )
                       }
@@ -348,7 +351,9 @@ const GroupManager = ({ token, onCheckAvailability }) => {
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
               新增成員至群組
             </h3>
-            <p className="text-gray-600 mb-4">請輸入要新增的成員 User ID：</p>
+            <p className="text-gray-600 mb-4">
+              請輸入要新增的成員的使用者名稱：
+            </p>
             <input
               type="text"
               placeholder="User ID"
@@ -382,8 +387,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
               確認移除成員
             </h3>
             <p className="text-gray-600 mb-4">
-              確定要從群組移除成員 "{removeConfirmData.userName}" (ID:{" "}
-              {removeConfirmData.userIdToRemove})？
+              確定要從群組移除成員 "{removeConfirmData.userName}"？
             </p>
             <div className="flex justify-end space-x-3">
               <button

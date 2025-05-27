@@ -51,16 +51,18 @@ exports.addGroupUser = async (req, res) => {
       return res.status(403).json({ error: "Permission denied" });
     }
     // Check user exist
-    const addUserId = await pool.query("SELECT id FROM users WHERE name = $1", [
-      addUserName,
-    ]);
-    if (!addUserId.rows.length) {
+    const addUserIdRes = await pool.query(
+      "SELECT id FROM users WHERE name = $1",
+      [addUserName]
+    );
+    if (!addUserIdRes.rows.length) {
       return res.status(404).json({ error: "User not found" });
     }
+    const addUserId = addUserIdRes.rows[0].id;
     // Check user in group
     const exist = await pool.query(
       "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2",
-      [groupId, addUserId.rows[0]]
+      [groupId, addUserId]
     );
     if (exist.rows.length) {
       return res.status(409).json({ error: "User already in this group" });
@@ -91,17 +93,18 @@ exports.removeGroupUser = async (req, res) => {
       return res.status(403).json({ error: "Permission denied" });
     }
     // Check user exist
-    const removeUserId = await pool.query(
+    const removeUserIdRes = await pool.query(
       "SELECT id FROM users WHERE name = $1",
       [removeUserName]
     );
-    if (!removeUserId.rows.length) {
+    if (!removeUserIdRes.rows.length) {
       return res.status(404).json({ error: "User not found" });
     }
+    const removeUserId = removeUserIdRes.rows[0].id;
     // Check user in group
     const exist = await pool.query(
       "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2",
-      [groupId, removeUserId.rows[0]]
+      [groupId, removeUserId]
     );
     if (!exist.rows.length) {
       return res.status(404).json({ error: "User not in group" });
