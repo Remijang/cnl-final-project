@@ -96,23 +96,23 @@ const MergedCalendar = ({
       <h3 className="text-center font-bold mt-2 mb-2">
         Events on {selectedDate.toLocaleDateString()}
       </h3>
-      <table
-        border="1"
-        cellPadding="6"
-        style={{ borderCollapse: "collapse", width: "100%" }}
-      >
+      <table className="w-full table-fixed border-collapse">
         <thead>
           <tr>
-            <th>Event Title</th>
-            <th>Time</th>
-            <th>Deletion</th>
+            <th className="w-1/3 border-2 border-black text-center">
+              Event Title
+            </th>
+            <th className="w-1/2 border-2 border-black text-center">Time</th>
+            <th className="w-1/6 border-2 border-black text-center">
+              Deletion
+            </th>
           </tr>
         </thead>
         <tbody>
           {selectedEvents.map((ev) => (
             <tr key={ev.id}>
-              <td>{ev.title}</td>
-              <td>
+              <td className="border-2 border-black text-center">{ev.title}</td>
+              <td className="border-2 border-black text-center">
                 {new Date(ev.start_time).toDateString() ===
                 new Date(ev.end_time).toDateString()
                   ? `${new Date(ev.start_time).toLocaleTimeString([], {
@@ -134,10 +134,57 @@ const MergedCalendar = ({
                       minute: "2-digit",
                     })}`}
               </td>
-              <td>
+              <td className="border-2 border-black text-center">
                 <button
                   onClick={() => handleDeleteEvent(ev.id)}
-                  className="bg-red-600 text-white py-1 px-3 rounded hover:bg-red-700 transition"
+                  className="bg-red-600 text-white py-0.4 px-2 text-xs rounded hover:bg-red-700 transition"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <table className="w-full table-fixed">
+        <thead>
+          <tr>
+            <th className="w-1/3 text-center">Event Title</th>
+            <th className="w-1/2 text-center">Time</th>
+            <th className="w-1/6 text-center">Deletion</th>
+          </tr>
+        </thead>
+        <tbody>
+          {selectedEvents.map((ev) => (
+            <tr key={ev.id}>
+              <td className="text-center">{ev.title}</td>
+              <td className="text-center">
+                {new Date(ev.start_time).toDateString() ===
+                new Date(ev.end_time).toDateString()
+                  ? `${new Date(ev.start_time).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })} - ${new Date(ev.end_time).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}`
+                  : `${new Date(ev.start_time).toLocaleString([], {
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })} - ${new Date(ev.end_time).toLocaleString([], {
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}`}
+              </td>
+              <td className="text-center">
+                <button
+                  onClick={() => handleDeleteEvent(ev.id)}
+                  className="bg-red-600 text-white py-0.4 px-2 text-xs rounded hover:bg-red-700 transition"
                 >
                   Delete
                 </button>
