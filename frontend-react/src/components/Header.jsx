@@ -29,7 +29,7 @@ const Header = ({ token, onLogout }) => {
         Groups
       </Link>
 
-      <Link to="/profile" style={{ marginRight: "1em" }}>
+      <Link to="/profile" className="link-button">
         Profile
       </Link>
 

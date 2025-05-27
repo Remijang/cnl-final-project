@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import "../css/Header.css";
 
 const CalendarEditor = ({ onSave, initialValue }) => {
   const [title, setTitle] = useState(initialValue?.title || "");
@@ -16,6 +17,7 @@ const CalendarEditor = ({ onSave, initialValue }) => {
         placeholder="行事曆名稱"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
+        className="search-input"
       />
       <label>
         <input
@@ -25,7 +27,9 @@ const CalendarEditor = ({ onSave, initialValue }) => {
         />
         公開
       </label>
-      <button type="submit">儲存</button>
+      <button type="submit" className="search-button ml-2">
+        儲存
+      </button>
     </form>
   );
 };

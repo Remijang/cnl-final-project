@@ -157,8 +157,7 @@ const PollManagerPlaceholder = ({
   );
 };
 
-const PollsPage = () => {
-  const [token, setToken] = useState(localStorage.getItem("token") || "");
+const PollsPage = ({ token }) => {
   const [polls, setPolls] = useState([]);
   const [pollDetails, setPollDetails] = useState({}); // hold pollId → time_ranges
   const [message, setMessage] = useState({ type: "", text: "" }); // State for custom messages
@@ -178,7 +177,7 @@ const PollsPage = () => {
   useEffect(() => {
     // Redirect to login page if no token is found
     if (!token) {
-      setMessage({ type: "error", text: "需要認證令牌才能查詢。請先登入。" });
+      setMessage({ type: "error", text: "需要登入才能查詢。請先登入。" });
       // Delay the navigation slightly to allow the UI to render the login prompt
       setTimeout(() => navigate("/login"), 1500);
       return; // Stop further execution of this effect

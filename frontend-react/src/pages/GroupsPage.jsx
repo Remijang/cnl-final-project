@@ -25,7 +25,7 @@ const GroupsPage = ({ token }) => {
   useEffect(() => {
     // Redirect to login page if no token is found
     if (!token) {
-      setMessage({ type: "error", text: "需要認證令牌才能查詢。請先登入。" });
+      setMessage({ type: "error", text: "需要登入才能查詢。請先登入。" });
       setTimeout(() => navigate("/login"), 1500);
       return; // Stop further execution of this effect
     }
