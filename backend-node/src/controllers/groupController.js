@@ -109,6 +109,12 @@ exports.removeGroupUser = async (req, res) => {
     if (!exist.rows.length) {
       return res.status(404).json({ error: "User not in group" });
     }
+    // Check if user is owner
+    if (userId === removeUserId) {
+      return res
+        .status(401)
+        .json({ error: "Removed user should not be owner of the group" });
+    }
     // Remove member
     await pool.query(
       "DELETE FROM group_members WHERE group_id = $1 AND user_id = $2",
