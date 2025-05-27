@@ -115,7 +115,7 @@ exports.getGroup = async (req, res) => {
   }
 };
 
-exports.deleteGroup = async (req, res) => {
+exports.removeGroup = async (req, res) => {
   const { groupId } = req.params;
   const userId = req.user.id;
   try {
