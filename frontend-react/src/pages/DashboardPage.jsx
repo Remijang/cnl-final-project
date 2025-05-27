@@ -142,7 +142,7 @@ const DashboardPage = () => {
               {selectedCalendarId ? (
                 <>
                   <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                    Manage calendar:{" "}
+                    Calendar:{" "}
                     <span className="text-blue-600">
                       {myCalendars.find((cal) => cal.id === selectedCalendarId)
                         ?.title || `(ID: ${selectedCalendarId})`}
