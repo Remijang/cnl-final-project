@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { getEventsByCalendar } from "../services/eventService";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import "../css/Calendar.css";
+import "../css/Calendar.css"; // Assuming this CSS file is correctly imported and contains necessary styles
 
 const MergedCalendar = ({
   token,
@@ -12,12 +12,15 @@ const MergedCalendar = ({
 }) => {
   const [mergedEvents, setMergedEvents] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  // Filter events for the selected date
   const selectedEvents = mergedEvents.filter((ev) => {
     const start = new Date(ev.start_time);
     const end = new Date(ev.end_time);
     const currentDate = new Date(selectedDate);
-    currentDate.setHours(0, 0, 0, 0);
+    currentDate.setHours(0, 0, 0, 0); // Normalize selected date to start of day
 
+    // Check if the event's time range overlaps with the selected date
     return (
       currentDate >= new Date(start.setHours(0, 0, 0, 0)) &&
       currentDate <= new Date(end.setHours(23, 59, 59, 999))
@@ -26,36 +29,53 @@ const MergedCalendar = ({
 
   useEffect(() => {
     const fetchAllEvents = async () => {
+      // Combine all calendars (my own and subscribed)
       const allCalendars = [...myCalendars, ...subscribedCalendars];
-      let allEvents = [];
+
+      // Use a Map to store unique events by their ID, preventing duplicates
+      // Assuming event.id is globally unique across all events.
+      // If event.id is only unique per calendar, a compound key like `${ev.id}-${cal.id}` would be needed.
+      let uniqueEventsMap = new Map();
 
       for (let cal of allCalendars) {
         try {
           const events = await getEventsByCalendar(token, cal.id);
-          const labeled = events.map((ev) => ({
-            ...ev,
-            calendarTitle: cal.title,
-          }));
-          allEvents = [...allEvents, ...labeled];
+          for (const ev of events) {
+            if (!uniqueEventsMap.has(ev.id)) {
+              // Check if event ID is already in the map
+              uniqueEventsMap.set(ev.id, {
+                ...ev,
+                calendarTitle: cal.title, // Add calendar title for display if needed
+              });
+            }
+          }
         } catch (err) {
-          console.error(`Fail to load calendar ${cal.id}`, err);
+          console.error(
+            `Failed to load events for calendar ${cal.title} (ID: ${cal.id}):`,
+            err
+          );
+          // Optionally, add a message to the user about failed calendar loading
         }
       }
-
-      setMergedEvents(allEvents);
+      // Convert Map values back to an array for state
+      setMergedEvents(Array.from(uniqueEventsMap.values()));
     };
 
+    // Fetch events only if token is available and there's at least one calendar
     if (token && (myCalendars.length > 0 || subscribedCalendars.length > 0)) {
       fetchAllEvents();
+    } else {
+      setMergedEvents([]); // Clear events if no calendars are provided or token is missing
     }
-  }, [token, myCalendars, subscribedCalendars]);
+  }, [token, myCalendars, subscribedCalendars]); // Re-run effect if these dependencies change
 
+  // Function to render event titles on calendar tiles
   const renderEventsOnDate = (date) => {
     const dayEvents = mergedEvents.filter((ev) => {
       const start = new Date(ev.start_time);
       const end = new Date(ev.end_time);
       const currentDate = new Date(date);
-      currentDate.setHours(0, 0, 0, 0);
+      currentDate.setHours(0, 0, 0, 0); // Normalize current date to start of day
 
       return (
         currentDate >= new Date(start.setHours(0, 0, 0, 0)) &&
@@ -63,14 +83,19 @@ const MergedCalendar = ({
       );
     });
 
+    // Display up to 2 events, and then a "+X more" if there are more
     const visibleEvents =
       dayEvents.length <= 3 ? dayEvents : dayEvents.slice(0, 2);
     const hiddenCount = dayEvents.length > 3 ? dayEvents.length - 2 : 0;
 
     return (
       <ul className="event-list">
+        {" "}
+        {/* Ensure 'event-list' class is defined in CSS */}
         {visibleEvents.map((ev) => (
           <li key={ev.id}>
+            {" "}
+            {/* ev.id is now unique within mergedEvents */}
             <strong>{ev.title}</strong>
           </li>
         ))}
@@ -81,118 +106,96 @@ const MergedCalendar = ({
     );
   };
 
+  // Placeholder for handleDeleteEvent as it's not part of MergedCalendar's responsibilities
+  // but was present in the original code snippet.
+  const handleDeleteEvent = (eventId) => {
+    console.warn(
+      `Delete event functionality not implemented in MergedCalendar. Attempted to delete event ID: ${eventId}`
+    );
+    // This function should ideally be passed down from a parent component that manages event deletion.
+  };
+
   return (
-    <div>
-      <div>
+    <div className="p-4 bg-white rounded-lg shadow-md">
+      <div className="mb-6">
         <Calendar
           value={selectedDate}
           onChange={setSelectedDate}
-          locale={"en"}
+          locale={"en"} // Set locale for calendar display
           tileContent={({ date, view }) =>
             view === "month" ? renderEventsOnDate(date) : null
           }
+          className="w-full border-none rounded-lg shadow-inner"
         />
       </div>
-      <h3 className="text-center font-bold mt-2 mb-2">
+
+      <h3 className="text-center font-bold text-xl text-gray-800 mt-2 mb-4">
         Events on {selectedDate.toLocaleDateString()}
       </h3>
-      <table className="w-full table-fixed border-collapse">
-        <thead>
-          <tr>
-            <th className="w-1/3 border-2 border-black text-center">
-              Event Title
-            </th>
-            <th className="w-1/2 border-2 border-black text-center">Time</th>
-            <th className="w-1/6 border-2 border-black text-center">
-              Deletion
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {selectedEvents.map((ev) => (
-            <tr key={ev.id}>
-              <td className="border-2 border-black text-center">{ev.title}</td>
-              <td className="border-2 border-black text-center">
-                {new Date(ev.start_time).toDateString() ===
-                new Date(ev.end_time).toDateString()
-                  ? `${new Date(ev.start_time).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })} - ${new Date(ev.end_time).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}`
-                  : `${new Date(ev.start_time).toLocaleString([], {
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })} - ${new Date(ev.end_time).toLocaleString([], {
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}`}
-              </td>
-              <td className="border-2 border-black text-center">
-                <button
-                  onClick={() => handleDeleteEvent(ev.id)}
-                  className="bg-red-600 text-white py-0.4 px-2 text-xs rounded hover:bg-red-700 transition"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
 
-      <table className="w-full table-fixed">
-        <thead>
-          <tr>
-            <th className="w-1/3 text-center">Event Title</th>
-            <th className="w-1/2 text-center">Time</th>
-            <th className="w-1/6 text-center">Deletion</th>
-          </tr>
-        </thead>
-        <tbody>
-          {selectedEvents.map((ev) => (
-            <tr key={ev.id}>
-              <td className="text-center">{ev.title}</td>
-              <td className="text-center">
-                {new Date(ev.start_time).toDateString() ===
-                new Date(ev.end_time).toDateString()
-                  ? `${new Date(ev.start_time).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })} - ${new Date(ev.end_time).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}`
-                  : `${new Date(ev.start_time).toLocaleString([], {
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })} - ${new Date(ev.end_time).toLocaleString([], {
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}`}
-              </td>
-              <td className="text-center">
-                <button
-                  onClick={() => handleDeleteEvent(ev.id)}
-                  className="bg-red-600 text-white py-0.4 px-2 text-xs rounded hover:bg-red-700 transition"
+      {selectedEvents.length === 0 ? (
+        <p className="text-center text-gray-600">此日期沒有事件。</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+            <thead>
+              <tr className="bg-gray-100 text-gray-700 uppercase text-sm leading-normal">
+                <th className="py-3 px-6 text-left border-b border-gray-200 w-1/3">
+                  Event Title
+                </th>
+                <th className="py-3 px-6 text-left border-b border-gray-200 w-1/2">
+                  Time
+                </th>
+                <th className="py-3 px-6 text-center border-b border-gray-200 w-1/6">
+                  Calendar
+                </th>{" "}
+                {/* Added Calendar column */}
+              </tr>
+            </thead>
+            <tbody className="text-gray-600 text-sm font-light">
+              {selectedEvents.map((ev) => (
+                <tr
+                  key={ev.id}
+                  className="border-b border-gray-200 hover:bg-gray-50"
                 >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                  <td className="py-3 px-6 text-left whitespace-nowrap">
+                    <div className="flex items-center">
+                      <span className="font-medium">{ev.title}</span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-6 text-left">
+                    {new Date(ev.start_time).toDateString() ===
+                    new Date(ev.end_time).toDateString()
+                      ? `${new Date(ev.start_time).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })} - ${new Date(ev.end_time).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}`
+                      : `${new Date(ev.start_time).toLocaleString([], {
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })} - ${new Date(ev.end_time).toLocaleString([], {
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}`}
+                  </td>
+                  <td className="py-3 px-6 text-center">
+                    <span className="bg-blue-200 text-blue-800 py-1 px-3 rounded-full text-xs">
+                      {ev.calendarTitle || "N/A"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

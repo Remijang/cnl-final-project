@@ -1,23 +1,35 @@
 import React from "react";
 
-function CalendarList({ calendars, onSelect }) {
+function CalendarList({ calendars, onSelect, selectedCalendarId }) {
+  // Added selectedCalendarId prop
   return (
-    <div>
-      <ul>
-        {calendars.map((cal) => (
-          <li
+    <div className="space-y-2">
+      {calendars.length === 0 ? (
+        <p className="text-gray-500">No calendars available.</p>
+      ) : (
+        calendars.map((cal) => (
+          <div
             key={cal.id}
             onClick={() => onSelect(cal.id)}
-            className="flex items-center space-x-2 py-2 cursor-pointer hover:bg-gray-100 rounded-md transition"
+            className={`p-3 rounded-md cursor-pointer transition duration-150 ease-in-out ${
+              selectedCalendarId === cal.id
+                ? "bg-blue-100 border-blue-400 border-2"
+                : "bg-gray-100 border border-gray-200 hover:bg-gray-200"
+            }`}
           >
-            <span className="w-2 h-2 bg-black rounded-full"></span>
-            <span>
-              <span className="text-blue-500 font-bold">{cal.title}</span> (
-              <span>{cal.visibility ? " Public " : " Private "}</span>)
-            </span>
-          </li>
-        ))}
-      </ul>
+            <h4 className="font-semibold text-gray-800">{cal.title}</h4>
+            <p className="text-sm text-gray-600">
+              ID: {cal.id} (
+              <span
+                className={cal.visibility ? "text-green-600" : "text-red-600"}
+              >
+                {cal.visibility ? "公開" : "私人"}
+              </span>
+              )
+            </p>
+          </div>
+        ))
+      )}
     </div>
   );
 }

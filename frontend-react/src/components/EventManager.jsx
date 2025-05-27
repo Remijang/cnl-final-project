@@ -1,112 +1,240 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   createEvent,
   deleteEvent,
   getEventsByCalendar,
 } from "../services/eventService";
 import { getUserCalendar } from "../services/calendarService";
-import MergedCalendar from "./MergedCalendar";
+// MergedCalendar is removed from here to avoid duplicated content.
+// import MergedCalendar from "./MergedCalendar";
 
-const EventManager = ({ token, calendar_id = 1 }) => {
+const EventManager = ({ token, calendar_id }) => {
+  // calendar_id will be passed from parent
   const [events, setEvents] = useState([]);
   const [title, setTitle] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [message, setMessage] = useState({ type: "", text: "" }); // State for custom messages
+
+  // Note: `calendars` state and `fetchCalendars` are not strictly needed
+  // within EventManager if its sole purpose is to manage events for a given `calendar_id`.
+  // They are kept for now as they were in the original code, but could be removed
+  // if `EventManager` is truly only for single calendar event management.
   const [calendars, setCalendars] = useState([]);
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
+    setMessage({ type: "", text: "" }); // Clear messages on new fetch
+    if (!token || !calendar_id) {
+      setMessage({
+        type: "error",
+        text: "缺少認證令牌或日曆ID，無法載入事件。",
+      });
+      return;
+    }
     try {
       const data = await getEventsByCalendar(token, calendar_id);
       setEvents(data);
+      if (data.length === 0) {
+        setMessage({ type: "info", text: "此日曆目前沒有事件。" });
+      }
     } catch (err) {
-      console.error("Failed to load events", err);
+      console.error("載入事件失敗", err);
+      setMessage({
+        type: "error",
+        text: `載入事件失敗：${err.message || "未知錯誤"}`,
+      });
     }
-  };
+  }, [token, calendar_id]);
 
-  const fetchCalendars = async () => {
+  const fetchCalendars = useCallback(async () => {
+    // This function is likely redundant if EventManager is only for a specific calendar_id
+    // and not for managing multiple calendars or their details.
+    // Keeping it for now as per original code structure.
     try {
       const data = await getUserCalendar(token);
       setCalendars(data);
     } catch (err) {
-      console.error("Failed to load calendar", err);
+      console.error("載入日曆失敗", err);
+      // No specific message here as it's a secondary fetch
+    }
+  }, [token]);
+
+  const handleCreateEvent = async () => {
+    setMessage({ type: "", text: "" }); // Clear previous messages
+    if (!title.trim() || !startTime || !endTime) {
+      setMessage({ type: "error", text: "請填寫所有事件欄位。" });
+      return;
+    }
+    if (new Date(startTime) >= new Date(endTime)) {
+      setMessage({ type: "error", text: "開始時間必須早於結束時間。" });
+      return;
+    }
+
+    const toUTC = (localStr) => new Date(localStr).toISOString(); // local → UTC ISO
+
+    try {
+      await createEvent(token, {
+        calendar_id: calendar_id,
+        title: title.trim(),
+        start_time: toUTC(startTime),
+        end_time: toUTC(endTime),
+      });
+      setMessage({ type: "success", text: `事件 "${title}" 建立成功！` });
+      setTitle("");
+      setStartTime("");
+      setEndTime("");
+      fetchEvents(); // Refresh events list
+    } catch (err) {
+      console.error("建立事件失敗", err);
+      setMessage({
+        type: "error",
+        text: `建立事件失敗：${err.message || "未知錯誤"}`,
+      });
     }
   };
 
-  const handleCreateEvent = async () => {
-    const toUTC = (localStr) => new Date(localStr).toISOString(); // local → UTC ISO
-
-    await createEvent(token, {
-      calendar_id: calendar_id,
-      title: title,
-      start_time: toUTC(startTime),
-      end_time: toUTC(endTime),
-    });
-
-    setTitle("");
-    setStartTime("");
-    setEndTime("");
-    fetchEvents();
-  };
-
   const handleDeleteEvent = async (eventId) => {
-    await deleteEvent(token, eventId);
-    fetchEvents();
+    setMessage({ type: "", text: "" }); // Clear previous messages
+    try {
+      await deleteEvent(token, eventId);
+      setMessage({ type: "success", text: "事件已成功刪除！" });
+      fetchEvents(); // Refresh events list
+    } catch (err) {
+      console.error("刪除事件失敗", err);
+      setMessage({
+        type: "error",
+        text: `刪除事件失敗：${err.message || "未知錯誤"}`,
+      });
+    }
   };
 
   useEffect(() => {
-    if (token) fetchEvents();
-  }, [token, calendar_id]);
+    if (token && calendar_id) {
+      fetchEvents();
+    } else {
+      setEvents([]); // Clear events if no token or calendar_id
+      setMessage({ type: "info", text: "請選擇一個日曆來管理事件。" });
+    }
+  }, [token, calendar_id, fetchEvents]); // Added fetchEvents to dependencies
 
   useEffect(() => {
-    if (token) fetchCalendars();
-    console.log("Calendars:", calendars);
-  }, [token]);
+    if (token) {
+      fetchCalendars();
+    }
+  }, [token, fetchCalendars]); // Added fetchCalendars to dependencies
 
   return (
-    <div className="flex flex-col space-y-4 max-w-md mb-6">
-      <div className="flex items-center space-x-2">
-        <label className="font-bold">Title:</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter title of event"
-          className="flex-1 p-2 border border-gray-300 rounded-md"
-        />
+    <div className="space-y-6">
+      {/* Message Box */}
+      {message.text && (
+        <div
+          className={`p-3 mb-4 rounded-md text-sm text-center ${
+            message.type === "success"
+              ? "bg-green-100 text-green-700"
+              : message.type === "error"
+              ? "bg-red-100 text-red-700"
+              : "bg-blue-100 text-blue-700" // Info message style
+          }`}
+          role="alert"
+        >
+          {message.text}
+        </div>
+      )}
+
+      {/* Create Event Form */}
+      <div className="bg-gray-50 p-6 rounded-lg shadow-inner">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">建立新事件</h3>
+        <div className="flex flex-col space-y-4">
+          <div>
+            <label
+              htmlFor="event-title"
+              className="block text-sm font-bold text-gray-700 mb-1"
+            >
+              標題:
+            </label>
+            <input
+              id="event-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="輸入事件標題"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="start-time"
+              className="block text-sm font-bold text-gray-700 mb-1"
+            >
+              開始時間:
+            </label>
+            <input
+              id="start-time"
+              type="datetime-local"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="end-time"
+              className="block text-sm font-bold text-gray-700 mb-1"
+            >
+              結束時間:
+            </label>
+            <input
+              id="end-time"
+              type="datetime-local"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+            />
+          </div>
+
+          <button
+            onClick={handleCreateEvent}
+            className="bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-700 transition duration-200 shadow-md self-center w-full sm:w-auto"
+          >
+            建立事件
+          </button>
+        </div>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <label className="font-bold">Start time:</label>
-        <input
-          type="datetime-local"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-          className="flex-1 p-2 border border-gray-300 rounded-md"
-        />
+      {/* Events List */}
+      <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">事件列表</h3>
+        {events.length === 0 && message.type !== "error" ? (
+          <p className="text-gray-600">此日曆目前沒有事件。</p>
+        ) : (
+          <ul className="space-y-3">
+            {events.map((event) => (
+              <li
+                key={event.id}
+                className="bg-gray-50 p-4 rounded-md border border-gray-200 flex justify-between items-center shadow-sm"
+              >
+                <div>
+                  <p className="font-semibold text-gray-800">{event.title}</p>
+                  <p className="text-sm text-gray-600">
+                    {new Date(event.start_time).toLocaleString()} -{" "}
+                    {new Date(event.end_time).toLocaleString()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDeleteEvent(event.id)}
+                  className="px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition duration-200 shadow-sm"
+                >
+                  刪除
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
-      <div className="flex items-center space-x-2">
-        <label className="font-bold">End time:</label>
-        <input
-          type="datetime-local"
-          value={endTime}
-          onChange={(e) => setEndTime(e.target.value)}
-          className="flex-1 p-2 border border-gray-300 rounded-md"
-        />
-      </div>
-
-      <button
-        onClick={handleCreateEvent}
-        className="bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-700 transition mx-auto w-auto"
-      >
-        Create Event
-      </button>
-
-      <MergedCalendar
-        token={token}
-        myCalendars={[]}
-        subscribedCalendars={calendars.filter((cal) => cal.id === calendar_id)}
-      />
+      {/* MergedCalendar is intentionally removed from here */}
     </div>
   );
 };

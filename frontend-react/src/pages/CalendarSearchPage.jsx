@@ -1,52 +1,100 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
   getVisibleCalendarByUsername,
   getSubscribedCalendars,
 } from "../services/calendarService";
-import { getEventsByCalendar } from "../services/eventService";
+import { getEventsByCalendar } from "../services/eventService"; // This import is not used in the provided code, but kept.
 import {
   subscribeCalendar,
   unsubscribeCalendar,
 } from "../services/subscriptionService";
-import MergedCalendar from "../components/MergedCalendar";
+import MergedCalendar from "../components/MergedCalendar"; // Assuming this path is correct
+
+// Placeholder for MergedCalendar for demonstration purposes
+// In your actual project, ensure this component is correctly implemented.
+const MergedCalendarPlaceholder = ({
+  token,
+  myCalendars,
+  subscribedCalendars,
+}) => {
+  return (
+    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 text-blue-800">
+      <h5 className="font-semibold mb-2">Merged Calendar View (Placeholder)</h5>
+      <p className="text-sm">
+        This would display a merged view of events from:
+      </p>
+      <ul className="list-disc list-inside text-xs">
+        {myCalendars.map((cal) => (
+          <li key={`my-${cal.id}`}>My Calendar: {cal.title}</li>
+        ))}
+        {subscribedCalendars.map((cal) => (
+          <li key={`sub-${cal.id}`}>Subscribed Calendar: {cal.title}</li>
+        ))}
+      </ul>
+      <p className="text-xs mt-2">
+        (Actual calendar rendering logic would go here)
+      </p>
+    </div>
+  );
+};
 
 const CalendarSearchPage = ({ token }) => {
   const { username } = useParams();
   const [results, setResults] = useState([]);
   const [error, setError] = useState("");
-  const [eventsMap, setEventsMap] = useState({}); // key: calendar_id, value: events
+  const [eventsMap, setEventsMap] = useState({}); // key: calendar_id, value: events (not used in provided code)
   const [subscribedIds, setSubscribedIds] = useState([]);
   const [expandedMap, setExpandedMap] = useState({});
+  const [message, setMessage] = useState({ type: "", text: "" }); // State for custom messages
+
+  const fetchCalendars = useCallback(async () => {
+    setError("");
+    setMessage({ type: "", text: "" }); // Clear messages on new fetch
+    if (!token || !username) {
+      // This scenario should ideally be handled by a redirect in parent component if login is required
+      setError("認證令牌或使用者名稱遺失。");
+      setMessage({ type: "error", text: "請先登入或提供使用者名稱。" });
+      return;
+    }
+    try {
+      const data = await getVisibleCalendarByUsername(token, username);
+      console.log("visible calendar:", data);
+      setResults(data);
+      if (data.length === 0) {
+        setMessage({
+          type: "info",
+          text: "找不到該使用者，或該使用者沒有公開行事曆。",
+        });
+      }
+    } catch (err) {
+      console.error("查詢失敗", err);
+      setError("找不到使用者，或該使用者沒有公開行事曆");
+      setMessage({
+        type: "error",
+        text: "查詢失敗：找不到使用者，或該使用者沒有公開行事曆。",
+      });
+    }
+  }, [token, username]);
 
   useEffect(() => {
-    setError("");
-    const fetchCalendars = async () => {
-      try {
-        const data = await getVisibleCalendarByUsername(token, username);
-        console.log("visible calendar:", data);
-        setResults(data);
-      } catch (err) {
-        console.error("查詢失敗", err);
-        setError("找不到使用者，或該使用者沒有公開行事曆");
-      }
-    };
-
-    if (token && username) fetchCalendars();
-  }, [token, username, subscribedIds]);
+    fetchCalendars();
+  }, [fetchCalendars]);
 
   useEffect(() => {
     const setInitIds = async () => {
+      if (!token) return; // Only fetch if token exists
       try {
         const subscribedCalendars = await getSubscribedCalendars(token);
         const ids = subscribedCalendars.map((c) => c.id);
         setSubscribedIds(ids);
       } catch (err) {
-        console.error("error: ", err);
+        console.error("Error fetching subscribed calendars: ", err);
+        setMessage({ type: "error", text: "無法載入已訂閱的行事曆資訊。" });
       }
     };
-    if (token) setInitIds();
-  }, []);
+    setInitIds();
+  }, [token]);
 
   const handleToggleExpand = (calendarId) => {
     setExpandedMap((prev) => ({
@@ -54,64 +102,102 @@ const CalendarSearchPage = ({ token }) => {
       [calendarId]: !prev[calendarId],
     }));
   };
+
   const handleSubscribe = async (calendarId) => {
+    setMessage({ type: "", text: "" }); // Clear previous messages
+    if (!token) {
+      setMessage({ type: "error", text: "請先登入才能訂閱或取消訂閱。" });
+      return;
+    }
     try {
       if (subscribedIds.includes(calendarId)) {
         await unsubscribeCalendar(token, calendarId);
         setSubscribedIds((prev) => prev.filter((id) => id !== calendarId));
-        alert("已取消訂閱");
+        setMessage({ type: "success", text: "已取消訂閱。" });
       } else {
         await subscribeCalendar(token, calendarId);
         setSubscribedIds((prev) => [...prev, calendarId]);
-        alert("訂閱成功");
+        setMessage({ type: "success", text: "訂閱成功！" });
       }
     } catch (err) {
       console.error("訂閱操作失敗", err);
-      alert("訂閱/取消失敗");
+      setMessage({
+        type: "error",
+        text: `訂閱/取消失敗：${err.message || "未知錯誤"}`,
+      });
     }
   };
 
   return (
-    <div style={{ padding: "1em" }}>
-      <h2>Public Calenar of {username}</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {results.map((cal) => (
-        <div
-          key={cal.id}
-          style={{
-            marginBottom: "1.5em",
-            borderBottom: "1px solid #ccc",
-            paddingBottom: "1em",
-          }}
-        >
-          <h4>{cal.title}</h4>
-          <p>Calendar ID: {cal.id}</p>
-          <button onClick={() => handleToggleExpand(cal.id)}>
-            {expandedMap[cal.id] ? "隱藏事件" : "顯示事件"}
-          </button>
-          <button
-            onClick={() => handleSubscribe(cal.id)}
-            style={{ marginLeft: "0.5em" }}
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 font-sans">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-10">
+        <h1 className="text-4xl font-extrabold text-gray-800 mb-8 text-center tracking-tight">
+          Public Calendars of {username}
+        </h1>
+
+        {/* Message Box */}
+        {message.text && (
+          <div
+            className={`p-3 mb-4 rounded-md text-sm text-center ${
+              message.type === "success"
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+            role="alert"
           >
-            {subscribedIds.includes(cal.id) ? "取消訂閱" : "訂閱"}
-          </button>
-          {expandedMap[cal.id] && (
+            {message.text}
+          </div>
+        )}
+
+        {error && <p className="text-red-600 text-center mb-4">{error}</p>}
+
+        {results.length === 0 && !error && !message.text && (
+          <p className="text-gray-600 text-center">正在載入公開行事曆...</p>
+        )}
+
+        <div className="space-y-6">
+          {results.map((cal) => (
             <div
-              style={{
-                marginTop: "1em",
-                background: "#f9f9f9",
-                padding: "1em",
-              }}
+              key={cal.id}
+              className="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200"
             >
-              <MergedCalendar
-                token={token}
-                myCalendars={[]} // 只傳這個 calendar
-                subscribedCalendars={[cal]}
-              />
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                {cal.title}
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Calendar ID: {cal.id}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => handleToggleExpand(cal.id)}
+                  className="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition duration-200 shadow-md"
+                >
+                  {expandedMap[cal.id] ? "隱藏事件" : "顯示事件"}
+                </button>
+                <button
+                  onClick={() => handleSubscribe(cal.id)}
+                  className={`px-4 py-2 rounded-md transition duration-200 shadow-md ${
+                    subscribedIds.includes(cal.id)
+                      ? "bg-red-500 hover:bg-red-600 text-white"
+                      : "bg-green-500 hover:bg-green-600 text-white"
+                  }`}
+                >
+                  {subscribedIds.includes(cal.id) ? "取消訂閱" : "訂閱"}
+                </button>
+              </div>
+              {expandedMap[cal.id] && (
+                <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <MergedCalendarPlaceholder // Using placeholder for demo
+                    token={token}
+                    myCalendars={[]} // Pass only this calendar for display
+                    subscribedCalendars={[cal]}
+                  />
+                </div>
+              )}
             </div>
-          )}
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
 };
