@@ -9,35 +9,7 @@ import {
   subscribeCalendar,
   unsubscribeCalendar,
 } from "../services/subscriptionService";
-import MergedCalendar from "../components/MergedCalendar"; // Assuming this path is correct
-
-// Placeholder for MergedCalendar for demonstration purposes
-// In your actual project, ensure this component is correctly implemented.
-const MergedCalendarPlaceholder = ({
-  token,
-  myCalendars,
-  subscribedCalendars,
-}) => {
-  return (
-    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 text-blue-800">
-      <h5 className="font-semibold mb-2">Merged Calendar View (Placeholder)</h5>
-      <p className="text-sm">
-        This would display a merged view of events from:
-      </p>
-      <ul className="list-disc list-inside text-xs">
-        {myCalendars.map((cal) => (
-          <li key={`my-${cal.id}`}>My Calendar: {cal.title}</li>
-        ))}
-        {subscribedCalendars.map((cal) => (
-          <li key={`sub-${cal.id}`}>Subscribed Calendar: {cal.title}</li>
-        ))}
-      </ul>
-      <p className="text-xs mt-2">
-        (Actual calendar rendering logic would go here)
-      </p>
-    </div>
-  );
-};
+import MergedCalendar from "../components/MergedCalendar"; // Using the actual MergedCalendar component
 
 const CalendarSearchPage = ({ token }) => {
   const { username } = useParams();
@@ -187,9 +159,9 @@ const CalendarSearchPage = ({ token }) => {
               </div>
               {expandedMap[cal.id] && (
                 <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <MergedCalendarPlaceholder // Using placeholder for demo
+                  <MergedCalendar // Using the actual MergedCalendar component
                     token={token}
-                    myCalendars={[]} // Pass only this calendar for display
+                    myCalendars={[]} // Pass only this calendar for display in MergedCalendar
                     subscribedCalendars={[cal]}
                   />
                 </div>

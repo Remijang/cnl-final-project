@@ -113,22 +113,11 @@ const DashboardPage = () => {
               }}
               className="block w-full sm:w-auto px-3 py-2 bg-indigo-50 border border-indigo-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"
             >
+              <option value="subscribed">Subscribed Calendar</option>
               <option value="merged">Aggregated Calendar</option>
               <option value="mine">My Calendar</option>
-              <option value="subscribed">Subscribed Calendar</option>
             </select>
           </div>
-        </div>
-
-        {/* Banner for the Dashboard page */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 rounded-lg shadow-md mb-8 text-center">
-          <p className="text-lg font-semibold">
-            Welcome to your Calendar Dashboard!
-          </p>
-          <p className="text-sm opacity-90">
-            Manage your personal calendars, explore subscribed ones, or view
-            them all in one place.
-          </p>
         </div>
 
         {/* Message Box */}

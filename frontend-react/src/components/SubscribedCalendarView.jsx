@@ -58,23 +58,12 @@ const SubscribedCalendarView = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 font-sans">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-10">
-        <h1 className="text-4xl font-extrabold text-gray-800 mb-8 text-center tracking-tight">
-          My Subscribed Calendars
-        </h1>
-
-        {/* Banner for the Subscribed Calendars page */}
-        <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-lg shadow-md mb-8 text-center">
-          <p className="text-lg font-semibold">
-            Manage your subscribed calendars here!
-          </p>
-          <p className="text-sm opacity-90">
-            View events from calendars you've subscribed to and unsubscribe if
-            needed.
-          </p>
-        </div>
-
+    <div className="font-sans">
+      {" "}
+      {/* Simplified outermost div */}
+      <div className="mx-auto">
+        {" "}
+        {/* Simplified inner container */}
         {/* Message Box */}
         {message.text && (
           <div
@@ -88,8 +77,7 @@ const SubscribedCalendarView = ({
             {message.text}
           </div>
         )}
-
-        {subscribedCalendars.length === 0 && message.type !== "error" ? ( // Only show this if no calendars and no error message
+        {subscribedCalendars.length === 0 && message.type !== "error" ? (
           <p className="text-gray-600 text-center">您尚未訂閱任何行事曆。</p>
         ) : (
           <div className="space-y-6">
