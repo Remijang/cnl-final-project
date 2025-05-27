@@ -112,7 +112,7 @@ const DashboardPage = () => {
               }}
               className="block w-full sm:w-auto px-3 py-2 bg-indigo-50 border border-indigo-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"
             >
-              <option value="merged">All Calendar</option>
+              <option value="merged">Aggregated Calendar</option>
               <option value="mine">My Calendar</option>
               <option value="subscribed">Subscribed Calendar</option>
             </select>
@@ -131,9 +131,9 @@ const DashboardPage = () => {
                 calendars={myCalendars}
                 onSelect={handleSelectCalendar}
               />
-              <h3 className="text-xl font-bold text-gray-800 mt-8 mb-4">
+              <h2 className="text-xl font-bold text-gray-800 mt-8 mb-4">
                 Add New Calendar
-              </h3>
+              </h2>
               <CalendarEditor onSave={handleCreateCalendar} />
             </div>
 
@@ -155,7 +155,7 @@ const DashboardPage = () => {
                 </>
               ) : (
                 <div className="text-center text-gray-600 h-full flex items-center justify-center">
-                  <p>Choose a calendar from the left</p>
+                  <p className="text-2xl">Select a calendar from the left</p>
                 </div>
               )}
             </div>
@@ -174,7 +174,7 @@ const DashboardPage = () => {
         ) : (
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              All Calendar
+              Aggregated Calendar
             </h2>
             <MergedCalendar
               token={token}
