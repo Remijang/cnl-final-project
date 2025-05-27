@@ -9,6 +9,7 @@ import {
   subscribeCalendar,
   unsubscribeCalendar,
 } from "../services/subscriptionService";
+import MergedCalendar from "../components/MergedCalendar";
 
 const CalendarSearchPage = ({ token }) => {
   const { username } = useParams();
@@ -16,6 +17,7 @@ const CalendarSearchPage = ({ token }) => {
   const [error, setError] = useState("");
   const [eventsMap, setEventsMap] = useState({}); // key: calendar_id, value: events
   const [subscribedIds, setSubscribedIds] = useState([]);
+  const [expandedMap, setExpandedMap] = useState({});
 
   useEffect(() => {
     setError("");
@@ -46,24 +48,12 @@ const CalendarSearchPage = ({ token }) => {
     if (token) setInitIds();
   }, []);
 
-  const handleToggleEvents = async (calendarId) => {
-    if (eventsMap[calendarId]) {
-      // already fetched, toggle off
-      setEventsMap((prev) => {
-        const updated = { ...prev };
-        delete updated[calendarId];
-        return updated;
-      });
-    } else {
-      try {
-        const data = await getEventsByCalendar(token, calendarId);
-        setEventsMap((prev) => ({ ...prev, [calendarId]: data }));
-      } catch (err) {
-        console.error("讀取事件失敗", err);
-      }
-    }
+  const handleToggleExpand = (calendarId) => {
+    setExpandedMap((prev) => ({
+      ...prev,
+      [calendarId]: !prev[calendarId],
+    }));
   };
-
   const handleSubscribe = async (calendarId) => {
     try {
       if (subscribedIds.includes(calendarId)) {
@@ -96,8 +86,8 @@ const CalendarSearchPage = ({ token }) => {
         >
           <h4>{cal.title}</h4>
           <p>Calendar ID: {cal.id}</p>
-          <button onClick={() => handleToggleEvents(cal.id)}>
-            {eventsMap[cal.id] ? "隱藏事件" : "顯示事件"}
+          <button onClick={() => handleToggleExpand(cal.id)}>
+            {expandedMap[cal.id] ? "隱藏事件" : "顯示事件"}
           </button>
           <button
             onClick={() => handleSubscribe(cal.id)}
@@ -105,14 +95,20 @@ const CalendarSearchPage = ({ token }) => {
           >
             {subscribedIds.includes(cal.id) ? "取消訂閱" : "訂閱"}
           </button>
-          {eventsMap[cal.id] && (
-            <ul style={{ marginTop: "0.5em" }}>
-              {eventsMap[cal.id].map((ev) => (
-                <li key={ev.id}>
-                  {ev.title}：{ev.start_time} - {ev.end_time}
-                </li>
-              ))}
-            </ul>
+          {expandedMap[cal.id] && (
+            <div
+              style={{
+                marginTop: "1em",
+                background: "#f9f9f9",
+                padding: "1em",
+              }}
+            >
+              <MergedCalendar
+                token={token}
+                myCalendars={[]} // 只傳這個 calendar
+                subscribedCalendars={[cal]}
+              />
+            </div>
           )}
         </div>
       ))}
