@@ -12,7 +12,6 @@ const CalendarDetailPage = () => {
   const [calendarDetails, setCalendarDetails] = useState(null);
   const [error, setError] = useState("");
 
-  // 從所有日曆中過濾出目標日曆
   const findCalendar = async () => {
     try {
       const [ownedCals, subCals] = await Promise.all([

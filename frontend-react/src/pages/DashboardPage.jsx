@@ -107,7 +107,7 @@ const DashboardPage = () => {
               htmlFor="view-mode-select"
               className="text-gray-700 font-medium mr-2 whitespace-nowrap"
             >
-              顯示：{" "}
+              Show:{" "}
             </label>
             <select
               id="view-mode-select"
@@ -118,9 +118,9 @@ const DashboardPage = () => {
               }}
               className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 w-full sm:w-auto"
             >
-              <option value="merged">整合事件時序</option>
-              <option value="mine">我的行事曆</option>
-              <option value="subscribed">訂閱的行事曆</option>
+              <option value="merged">All Calendar</option>
+              <option value="mine">My Calendar</option>
+              <option value="subscribed">Subscribed Calendar</option>
             </select>
           </div>
         </div>
@@ -131,14 +131,14 @@ const DashboardPage = () => {
             {/* My Calendars List and Create New Calendar */}
             <div className="bg-gray-50 p-6 rounded-lg shadow-inner">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                我的行事曆
+                My Calendar
               </h2>
               <CalendarList
                 calendars={myCalendars}
                 onSelect={handleSelectCalendar}
               />
               <h3 className="text-xl font-bold text-gray-800 mt-8 mb-4">
-                建立新行事曆
+                Add New Calendar
               </h3>
               <CalendarEditor onSave={handleCreateCalendar} />
             </div>
@@ -148,7 +148,7 @@ const DashboardPage = () => {
               {selectedCalendarId ? (
                 <>
                   <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                    管理行事曆：{" "}
+                    Manage calendar:{" "}
                     <span className="text-blue-600">
                       {myCalendars.find((cal) => cal.id === selectedCalendarId)
                         ?.title || `(ID: ${selectedCalendarId})`}
@@ -161,7 +161,7 @@ const DashboardPage = () => {
                 </>
               ) : (
                 <div className="text-center text-gray-600 h-full flex items-center justify-center">
-                  <p>請從左側選擇一個行事曆來管理事件。</p>
+                  <p>Choose a calendar from the left</p>
                 </div>
               )}
             </div>
@@ -169,7 +169,7 @@ const DashboardPage = () => {
         ) : viewMode === "subscribed" ? (
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              我訂閱的行事曆
+              Subscribed Calendar
             </h2>
             <SubscribedCalendarView
               subscribedCalendars={subscribedOnly}
@@ -180,7 +180,7 @@ const DashboardPage = () => {
         ) : (
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              整合行事曆事件
+              All Calendar
             </h2>
             <MergedCalendar
               token={token}

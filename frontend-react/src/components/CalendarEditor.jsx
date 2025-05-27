@@ -14,7 +14,7 @@ const CalendarEditor = ({ onSave, initialValue }) => {
     <form onSubmit={handleSubmit}>
       <input
         type="text"
-        placeholder="行事曆名稱"
+        placeholder="Name of the Calendar"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         className="search-input"
@@ -25,10 +25,13 @@ const CalendarEditor = ({ onSave, initialValue }) => {
           checked={shared}
           onChange={(e) => setShared(e.target.checked)}
         />
-        公開
+        Public
       </label>
-      <button type="submit" className="search-button ml-2">
-        儲存
+      <button
+        type="submit"
+        className="block bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 ml-2"
+      >
+        Save
       </button>
     </form>
   );
