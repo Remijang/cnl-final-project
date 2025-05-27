@@ -1,47 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { getEventsByCalendar } from "../services/eventService";
+import React, { useState } from "react";
 import { unsubscribeCalendar } from "../services/subscriptionService";
 import MergedCalendar from "./MergedCalendar"; // Using the actual MergedCalendar component
 
 const SubscribedCalendarView = ({
+  myCalendars = [], // Renamed from mycalendars for consistency and clarity
   subscribedCalendars = [],
   token,
   onUnsubscribeSuccess,
 }) => {
-  const [calendarEvents, setCalendarEvents] = useState({});
   const [message, setMessage] = useState({ type: "", text: "" }); // State for custom messages
-
-  useEffect(() => {
-    const fetchAllEvents = async () => {
-      const allEvents = {};
-      setMessage({ type: "", text: "" }); // Clear messages on new fetch
-      for (let cal of subscribedCalendars) {
-        try {
-          const events = await getEventsByCalendar(token, cal.id);
-          allEvents[cal.id] = events;
-        } catch (err) {
-          console.error(`Failed to read calendar ${cal.id}`, err);
-          allEvents[cal.id] = [];
-          setMessage({
-            type: "error",
-            text: `Failed to read calendar ${cal.title}.`,
-          });
-        }
-      }
-      setCalendarEvents(allEvents);
-    };
-
-    if (token && subscribedCalendars.length > 0) {
-      fetchAllEvents();
-    } else if (subscribedCalendars.length === 0) {
-      // If there are no subscribed calendars, clear any previous events and messages
-      setCalendarEvents({});
-      setMessage({
-        type: "info",
-        text: "You haven't subscribed to any calendars yet.",
-      });
-    }
-  }, [token, subscribedCalendars]);
 
   const handleUnsubscribe = async (calendarId, calendarTitle) => {
     setMessage({ type: "", text: "" }); // Clear previous messages
@@ -65,11 +32,7 @@ const SubscribedCalendarView = ({
 
   return (
     <div className="font-sans">
-      {" "}
-      {/* Simplified outermost div */}
       <div className="mx-auto">
-        {" "}
-        {/* Simplified inner container */}
         {/* Message Box */}
         {message.text && (
           <div
@@ -83,7 +46,23 @@ const SubscribedCalendarView = ({
             {message.text}
           </div>
         )}
-        {subscribedCalendars.length === 0 && message.type !== "error" ? (
+
+        {/* Display the Merged Calendar */}
+        <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+          All Your Events
+        </h2>
+        {/* Pass both myCalendars and subscribedCalendars to MergedCalendar */}
+        <MergedCalendar
+          token={token}
+          myCalendars={myCalendars}
+          subscribedCalendars={subscribedCalendars}
+        />
+
+        {/* Section to manage individual subscribed calendars for unsubscribe */}
+        <h2 className="text-2xl font-bold text-gray-800 mt-8 mb-4 text-center">
+          Manage Subscriptions
+        </h2>
+        {subscribedCalendars.length === 0 ? (
           <p className="text-gray-600 text-center">
             You haven't subscribed to any calendars yet.
           </p>
@@ -106,13 +85,6 @@ const SubscribedCalendarView = ({
                 >
                   Unsubscribe
                 </button>
-                <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <MergedCalendar
-                    token={token}
-                    myCalendars={[]}
-                    subscribedCalendars={[cal]}
-                  />
-                </div>
               </div>
             ))}
           </div>

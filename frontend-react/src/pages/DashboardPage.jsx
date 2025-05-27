@@ -188,6 +188,7 @@ const DashboardPage = () => {
               Subscribed Calendars
             </h2>
             <SubscribedCalendarView
+              myCalendars={myCalendars}
               subscribedCalendars={subscribedOnly}
               token={token}
               onUnsubscribeSuccess={handleUnsubscribeSuccess} // Pass the callback for successful unsubscribe
