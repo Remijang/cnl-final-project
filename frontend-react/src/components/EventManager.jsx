@@ -107,17 +107,6 @@ const EventManager = ({ token, calendar_id = 1 }) => {
         myCalendars={[]}
         subscribedCalendars={calendars.filter((cal) => cal.id === calendar_id)}
       />
-      <h2>Events</h2>
-      <ul>
-        {events.map((e) => (
-          <li key={e.id}>
-            <strong>{e.title}</strong> (
-            {new Date(e.start_time).toLocaleString()} →{" "}
-            {new Date(e.end_time).toLocaleString()})
-            <button onClick={() => handleDeleteEvent(e.id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 };

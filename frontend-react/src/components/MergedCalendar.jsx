@@ -38,7 +38,7 @@ const MergedCalendar = ({
           }));
           allEvents = [...allEvents, ...labeled];
         } catch (err) {
-          console.error(`讀取日曆 ${cal.id} 失敗`, err);
+          console.error(`Fail to load calendar ${cal.id}`, err);
         }
       }
 
@@ -93,7 +93,9 @@ const MergedCalendar = ({
           }
         />
       </div>
-      <h3>{selectedDate.toLocaleDateString()} 的事件</h3>
+      <h3 className="text-center font-bold mt-2 mb-2">
+        Events on {selectedDate.toLocaleDateString()}
+      </h3>
       <table
         border="1"
         cellPadding="6"
@@ -103,7 +105,7 @@ const MergedCalendar = ({
           <tr>
             <th>Event Title</th>
             <th>Time</th>
-            <th>Calendar</th>
+            <th>Deletion</th>
           </tr>
         </thead>
         <tbody>
@@ -132,8 +134,14 @@ const MergedCalendar = ({
                       minute: "2-digit",
                     })}`}
               </td>
-
-              <td>{ev.calendarTitle}</td>
+              <td>
+                <button
+                  onClick={() => handleDeleteEvent(ev.id)}
+                  className="bg-red-600 text-white py-1 px-3 rounded hover:bg-red-700 transition"
+                >
+                  Delete
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
