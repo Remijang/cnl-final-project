@@ -24,12 +24,13 @@ const CalendarEditor = ({ onSave, initialValue }) => {
           type="checkbox"
           checked={shared}
           onChange={(e) => setShared(e.target.checked)}
+          className="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-2 focus:ring-green-400"
         />
-        Public
+        <span className="ml-2 font-medium">Public</span>
       </label>
       <button
         type="submit"
-        className="block bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 ml-2"
+        className="block bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 mt-4"
       >
         Save
       </button>

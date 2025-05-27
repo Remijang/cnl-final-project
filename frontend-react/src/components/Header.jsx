@@ -39,7 +39,7 @@ const Header = ({ token, onLogout }) => {
       >
         <input
           type="text"
-          placeholder="搜尋使用者"
+          placeholder="Search User"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           className="search-input"

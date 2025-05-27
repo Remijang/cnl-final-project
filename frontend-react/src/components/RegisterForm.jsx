@@ -15,11 +15,14 @@ const RegisterForm = () => {
     setMessage({ type: "", text: "" }); // Clear previous messages
     try {
       await register({ name, email, password });
-      setMessage({ type: "success", text: "註冊成功，請登入" });
+      setMessage({
+        type: "success",
+        text: "Resgister successfully, please login.",
+      });
       setTimeout(() => navigate("/login"), 1500); // Navigate after a short delay
     } catch (err) {
       console.error("註冊失敗", err);
-      setMessage({ type: "error", text: "註冊失敗：" + err.message });
+      setMessage({ type: "error", text: "Resgister failed:" + err.message });
     }
   };
 
@@ -42,14 +45,14 @@ const RegisterForm = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="name" className="sr-only">
-            使用者名稱
+            User Name
           </label>
           <input
             id="name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="使用者名稱"
+            placeholder="User Name"
             required
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
           />
@@ -91,12 +94,12 @@ const RegisterForm = () => {
       </form>
 
       <p className="text-center text-gray-600 mt-6">
-        已經有帳號？
+        Already registered?
         <button
           onClick={() => navigate("/login")}
           className="text-blue-600 hover:text-blue-800 font-semibold ml-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md"
         >
-          返回登入
+          Go back to login
         </button>
       </p>
     </div>

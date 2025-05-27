@@ -16,11 +16,11 @@ const LoginForm = ({ setToken }) => {
       const token = result.token;
       localStorage.setItem("token", token);
       setToken(token);
-      setMessage({ type: "success", text: "登入成功！" });
+      setMessage({ type: "success", text: "Login successfully！" });
       setTimeout(() => navigate("/"), 1500);
     } catch (err) {
       console.error("Login failed", err);
-      setMessage({ type: "error", text: "登入失敗：" + err.message });
+      setMessage({ type: "error", text: "Login failed：" + err.message });
     }
   };
 
@@ -78,13 +78,13 @@ const LoginForm = ({ setToken }) => {
       </form>
 
       <p className="text-center text-gray-600 mt-6">
-        還沒有帳號嗎？{" "}
+        Not registered?{" "}
         <Link to="/register">
           <button
             type="button"
             className="text-blue-600 hover:text-blue-800 font-semibold ml-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md"
           >
-            前往註冊
+            Go to register
           </button>
         </Link>
       </p>

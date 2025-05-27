@@ -44,7 +44,7 @@ const SubscribedCalendarView = ({
 
   return (
     <div>
-      <h2>訂閱的行事曆</h2>
+      <h2>Subscribed Calendar</h2>
       {subscribedCalendars.map((cal) => (
         <div
           key={cal.id}

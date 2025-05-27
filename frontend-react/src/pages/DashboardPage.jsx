@@ -103,12 +103,6 @@ const DashboardPage = () => {
 
           {/* View Mode Selector (formerly "search box" or main control) */}
           <div className="flex items-center">
-            <label
-              htmlFor="view-mode-select"
-              className="text-gray-700 font-medium mr-2 whitespace-nowrap"
-            >
-              Show:{" "}
-            </label>
             <select
               id="view-mode-select"
               value={viewMode}
@@ -116,7 +110,7 @@ const DashboardPage = () => {
                 setViewMode(e.target.value);
                 setSelectedCalendarId(null);
               }}
-              className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 w-full sm:w-auto"
+              className="block w-full sm:w-auto px-3 py-2 bg-indigo-50 border border-indigo-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"
             >
               <option value="merged">All Calendar</option>
               <option value="mine">My Calendar</option>
