@@ -114,3 +114,23 @@ exports.getGroup = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.deleteGroup = async (req, res) => {
+  const { groupId } = req.params;
+  const userId = req.user.id;
+  try {
+    // Check ownership
+    const group = await pool.query(
+      "SELECT owner_id FROM groups WHERE id = $1",
+      [groupId]
+    );
+    if (!group.rows.length || group.rows[0].owner_id !== userId) {
+      return res.status(403).json({ error: "Permission denied" });
+    }
+    // Remove group
+    await pool.query("DELETE FROM groups WHERE id = $1", [groupId]);
+    res.status(200).json({ message: "Group removed successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
