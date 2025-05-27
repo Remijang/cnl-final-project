@@ -5,6 +5,7 @@ import {
   getGroup,
   addGroupUser,
   removeGroupUser,
+  removeGroup,
 } from "../services/groupService";
 
 const GroupManager = ({ token, onCheckAvailability }) => {
@@ -16,6 +17,10 @@ const GroupManager = ({ token, onCheckAvailability }) => {
   // State for Create Group Modal
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
+
+  const [groupToRemove, setGroupToRemove] = useState(null); // {groupId, groupName}
+  const [showConfirmRemoveGroupModal, setShowConfirmRemoveGroupModal] =
+    useState(false);
 
   // State for Add User Modal
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -74,6 +79,11 @@ const GroupManager = ({ token, onCheckAvailability }) => {
     setShowCreateGroupModal(true);
   };
 
+  const handleRemoveGroupClick = (group) => {
+    setGroupToRemove({ groupId: group.id, groupName: group.name });
+    setShowConfirmRemoveGroupModal(true);
+  };
+
   const handleCreateGroupConfirm = async () => {
     if (!newGroupName.trim()) {
       setMessage({ type: "error", text: "群組名稱不能為空。" });
@@ -99,9 +109,37 @@ const GroupManager = ({ token, onCheckAvailability }) => {
     }
   };
 
+  const handleRemoveGroupConfirm = async () => {
+    setShowConfirmRemoveGroupModal(false);
+    try {
+      setIsLoading(true);
+      await removeGroup(token, groupToRemove.groupId);
+
+      setMessage({
+        type: "success",
+        text: `群組 "${newGroupName}" 移除成功！`,
+      });
+      await fetchGroupsAndMembers(); // Refresh the list
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: `建立群組失敗：${err.message || "未知錯誤"}`,
+      });
+      setError(err.message || "Failed to create group");
+    } finally {
+      setIsLoading(false);
+      setGroupToRemove(null);
+    }
+  };
+
   const handleCreateGroupCancel = () => {
     setShowCreateGroupModal(false);
     setNewGroupName("");
+  };
+
+  const handleRemoveGroupCancel = () => {
+    setShowConfirmRemoveGroupModal(false);
+    setGroupToRemove(null);
   };
 
   // --- Add User Handlers ---
@@ -236,18 +274,18 @@ const GroupManager = ({ token, onCheckAvailability }) => {
         </p>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="">
         {groups.map((group) => (
           <div
             key={group.id}
             className="bg-white rounded-lg shadow-md border border-gray-200 p-6 flex flex-col"
           >
             <h3 className="text-xl font-bold text-gray-800 mb-2">
-              {group.name}
+              {group.owner_username}
             </h3>
-            {group.owner_id && (
+            {group.members[group.members.length - 1].name && (
               <p className="text-sm text-gray-500 mb-4">
-                群組擁有者 ID: {group.owner_id}
+                群組擁有者: {group.members[group.members.length - 1].name}
               </p>
             )}
 
@@ -290,23 +328,36 @@ const GroupManager = ({ token, onCheckAvailability }) => {
                 ))}
               </ul>
             )}
-            <div className="flex flex-wrap gap-2 mt-auto pt-4 border-t border-gray-100">
-              <button
-                onClick={() => handleAddUserClick(group.id)}
-                disabled={isLoading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                新增成員
-              </button>
-              {/* Add a button for checking availability here, linked to onCheckAvailability prop */}
-              {onCheckAvailability && (
+            <div className="flex justify-between items-center w-full">
+              {" "}
+              {/* Parent flex container */}
+              <div className="flex space-x-2">
+                {" "}
+                {/* New div to group the first two buttons */}
                 <button
-                  onClick={() => onCheckAvailability(group.id, group.name)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200 shadow-md"
+                  onClick={() => handleAddUserClick(group.id)}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  查詢空閒時段
+                  新增成員
                 </button>
-              )}
+                {/* Add a button for checking availability here, linked to onCheckAvailability prop */}
+                {onCheckAvailability && (
+                  <button
+                    onClick={() => onCheckAvailability(group.id, group.name)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200 shadow-md"
+                  >
+                    查詢空閒時段
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => handleRemoveGroupClick(group)}
+                disabled={isLoading}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                移除群組
+              </button>
             </div>
           </div>
         ))}
@@ -398,6 +449,34 @@ const GroupManager = ({ token, onCheckAvailability }) => {
               </button>
               <button
                 onClick={handleRemoveUserConfirm}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200"
+              >
+                移除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Remove Group Modal */}
+      {showConfirmRemoveGroupModal && groupToRemove && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              確認移除群組
+            </h3>
+            <p className="text-gray-600 mb-4">
+              確定要移除群組 "{groupToRemove.groupName}"？
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleRemoveGroupCancel}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleRemoveGroupConfirm}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200"
               >
                 移除

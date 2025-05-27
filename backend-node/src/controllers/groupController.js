@@ -25,11 +25,16 @@ exports.getAllGroup = async (req, res) => {
   const userId = req.user.id;
   try {
     const result = await pool.query(
-      `SELECT g.* FROM groups g
-       JOIN group_members gm ON g.id = gm.group_id
-       WHERE gm.user_id = $1`,
+      `SELECT
+      g.*, u.name AS owner_username
+      FROM groups g
+      JOIN group_members gm ON g.id = gm.group_id
+      JOIN users u ON g.owner_id = u.id
+      WHERE gm.user_id = $1;
+        `,
       [userId]
     );
+
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
