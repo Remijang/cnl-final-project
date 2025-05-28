@@ -17,7 +17,7 @@ const Header = ({ token, onLogout }) => {
   return (
     <div className="header">
       <h2 style={{ display: "inline", marginRight: "1em" }}>🗓️ Calendar App</h2>
-      <Link to="/" className="link-button">
+      <Link to="/calendar/" className="link-button">
         Dashboard
       </Link>
 
