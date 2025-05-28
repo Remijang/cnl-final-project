@@ -18,6 +18,34 @@ const ProfilePage = () => {
 
   const navigate = useNavigate(); // Initialize useNavigate
 
+  const fetchProfile = async () => {
+    try {
+      const data = await getProfile(token);
+      setProfile(data);
+      setFormData({
+        name: data.name,
+        bio: data.bio || "",
+        avatar_url: data.avatar_url || "",
+      });
+      setLoading(false);
+    } catch (err) {
+      // If profile fetch fails (e.g., token invalid/expired), set error message
+      // and redirect to login after clearing the token.
+      console.error("Failed to fetch profile:", err);
+      setError(err.response?.data?.error || "Failed to retrieve profile data.");
+      setMessage({
+        type: "error",
+        text: `Failed to load profile: ${
+          err.response?.data?.error ||
+          "Your session might have expired. Please log in again."
+        }`,
+      });
+      setLoading(false);
+      localStorage.removeItem("token"); // Clear invalid token
+      setToken(""); // Update token state to trigger the redirect logic
+      // The `if (!token)` check at the beginning of this `useEffect` will handle the navigation
+    }
+  };
   // Effect to handle initial token check and profile fetch
   useEffect(() => {
     // If no token, set an error message and redirect to login after a delay
@@ -30,37 +58,6 @@ const ProfilePage = () => {
       const timer = setTimeout(() => navigate("/login"), 1500);
       return () => clearTimeout(timer); // Clean up the timer if component unmounts
     }
-
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfile(token);
-        setProfile(data);
-        setFormData({
-          name: data.name,
-          bio: data.bio || "",
-          avatar_url: data.avatar_url || "",
-        });
-        setLoading(false);
-      } catch (err) {
-        // If profile fetch fails (e.g., token invalid/expired), set error message
-        // and redirect to login after clearing the token.
-        console.error("Failed to fetch profile:", err);
-        setError(
-          err.response?.data?.error || "Failed to retrieve profile data."
-        );
-        setMessage({
-          type: "error",
-          text: `Failed to load profile: ${
-            err.response?.data?.error ||
-            "Your session might have expired. Please log in again."
-          }`,
-        });
-        setLoading(false);
-        localStorage.removeItem("token"); // Clear invalid token
-        setToken(""); // Update token state to trigger the redirect logic
-        // The `if (!token)` check at the beginning of this `useEffect` will handle the navigation
-      }
-    };
     fetchProfile();
   }, [token, navigate]); // `token` and `Maps` are dependencies
 
@@ -88,7 +85,7 @@ const ProfilePage = () => {
     }
 
     try {
-      const updatedProfile = await updateProfile(formData, token);
+      const updatedProfile = await updateProfile(token, formData);
       setProfile(updatedProfile);
       setSuccessMsg("Profile updated successfully!");
       setMessage({ type: "success", text: "Profile updated successfully!" });
@@ -114,6 +111,8 @@ const ProfilePage = () => {
         });
         setTimeout(() => navigate("/login"), 1500);
       }
+    } finally {
+      await fetchProfile(); // Refresh profile data after update attempt
     }
   };
 
@@ -177,7 +176,6 @@ const ProfilePage = () => {
             <img
               src={formData.avatar_url}
               className="h-24 w-24 rounded-full object-cover border-4 border-white shadow-md ring-2 ring-indigo-500 mb-2"
-              alt="User Avatar" // Added alt attribute for accessibility
             />
             <p className="text-sm text-gray-500 text-center">User Avatar</p>
           </div>

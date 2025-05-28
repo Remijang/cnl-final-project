@@ -1,6 +1,7 @@
 import React from "react";
+import CalendarAdmin from "./PermisionAdmin";
 
-function CalendarList({ calendars, onSelect, selectedCalendarId }) {
+function CalendarList({ calendars, onSelect, selectedCalendarId, token }) {
   // Added selectedCalendarId prop
   return (
     <div className="space-y-2">
@@ -18,15 +19,7 @@ function CalendarList({ calendars, onSelect, selectedCalendarId }) {
             }`}
           >
             <h4 className="font-semibold text-gray-800">{cal.title}</h4>
-            <p className="text-sm text-gray-600">
-              ID: {cal.id} (
-              <span
-                className={cal.visibility ? "text-green-600" : "text-red-600"}
-              >
-                {cal.visibility ? "Public" : "Private"}
-              </span>
-              )
-            </p>
+            <CalendarAdmin token={token} calendarId={cal.id}></CalendarAdmin>
           </div>
         ))
       )}

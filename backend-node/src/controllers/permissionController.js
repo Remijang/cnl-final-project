@@ -1,6 +1,36 @@
 const pool = require("../config/db");
 const subscriptionController = require("./subscriptionController");
 
+exports.getVisibility = async (req, res) => {
+  const { calendarId } = req.params;
+  const userId = req.user.id;
+  try {
+    const ownershipCheck = await pool.query(
+      `SELECT owner_id 
+        FROM calendars 
+        WHERE id = $1`,
+      [calendarId]
+    );
+
+    if (ownershipCheck.rowCount === 0) {
+      return res.status(404).json({ error: "Calendar not found" });
+    }
+    if (ownershipCheck.rows[0].owner_id !== userId) {
+      return res.status(403).json({ error: "Permission denied" });
+    }
+
+    const result = await pool.query(
+      `SELECT visibility
+        FROM calendars
+        WHERE id = $1`,
+      [calendarId]
+    );
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.visibilityOn = async (req, res) => {
   const { calendarId } = req.params;
   const userId = req.user.id;
@@ -77,6 +107,36 @@ exports.visibilityOff = async (req, res) => {
   }
 };
 
+exports.getReadLinkPermission = async (req, res) => {
+  const { calendarId } = req.params;
+  const userId = req.user.id;
+  try {
+    const ownershipCheck = await pool.query(
+      `SELECT owner_id 
+        FROM calendars 
+        WHERE id = $1`,
+      [calendarId]
+    );
+
+    if (ownershipCheck.rowCount === 0) {
+      return res.status(404).json({ error: "Calendar not found" });
+    }
+    if (ownershipCheck.rows[0].owner_id !== userId) {
+      return res.status(403).json({ error: "Permission denied" });
+    }
+
+    const result = await pool.query(
+      `SELECT id, read_link_enable, read_link
+        from calendars
+        WHERE id = $1`,
+      [calendarId]
+    );
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.readLinkOn = async (req, res) => {
   const { calendarId } = req.params;
   const userId = req.user.id;
@@ -145,6 +205,36 @@ exports.readLinkOff = async (req, res) => {
     await subscriptionController._unsubscribeCalendar(
       calendarId,
       removeUserIds
+    );
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getWriteLinkPermission = async (req, res) => {
+  const { calendarId } = req.params;
+  const userId = req.user.id;
+  try {
+    const ownershipCheck = await pool.query(
+      `SELECT owner_id 
+        FROM calendars 
+        WHERE id = $1`,
+      [calendarId]
+    );
+
+    if (ownershipCheck.rowCount === 0) {
+      return res.status(404).json({ error: "Calendar not found" });
+    }
+    if (ownershipCheck.rows[0].owner_id !== userId) {
+      return res.status(403).json({ error: "Permission denied" });
+    }
+
+    const result = await pool.query(
+      `SELECT id, write_link_enable, write_link
+        FROM calendars 
+        WHERE id = $1`,
+      [calendarId]
     );
     res.status(200).json(result.rows[0]);
   } catch (err) {

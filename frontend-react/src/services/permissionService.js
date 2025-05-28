@@ -13,8 +13,10 @@ export const toggleLinkEnable = (token, calendar_id, mode, on) =>
     "POST",
     token
   );
-export const getLinkKey = (token, calendar_id, mode) =>
+
+export const getPermission = (token, calendar_id, mode) =>
   apiFetch(`/permission/${calendar_id}/${mode}`, "GET", token);
+
 export const claimPermissionWithKey = (token, calendar_id, mode, key) =>
   apiFetch(
     `/permission/${calendar_id}/${mode}/claim?key=${key}`,

@@ -152,6 +152,7 @@ const DashboardPage = () => {
                 calendars={myCalendars}
                 onSelect={handleSelectCalendar}
                 selectedCalendarId={selectedCalendarId}
+                token={token}
               />
               <h2 className="text-xl font-bold text-gray-800 mt-8 mb-4">
                 Add New Calendar

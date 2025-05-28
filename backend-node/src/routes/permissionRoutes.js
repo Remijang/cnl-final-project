@@ -8,6 +8,10 @@ router.post("/:calendarId/read/on", permissionController.readLinkOn);
 router.post("/:calendarId/read/off", permissionController.readLinkOff);
 router.post("/:calendarId/write/on", permissionController.writeLinkOn);
 router.post("/:calendarId/write/off", permissionController.writeLinkOff);
+router.get("/:calendarId/visibility", permissionController.getVisibility);
+router.get("/:calendarId/read", permissionController.getReadLinkPermission);
+router.get("/:calendarId/write", permissionController.getWriteLinkPermission);
+
 router.post(
   "/:calendarId/read/claim",
   permissionController.claimReadPermission
