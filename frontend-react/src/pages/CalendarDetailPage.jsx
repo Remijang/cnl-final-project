@@ -33,6 +33,7 @@ const CalendarDetailPage = ({ token, calendarId }) => {
         return;
       }
       setCalendarDetails(targetCal);
+
       setMessage({ type: "success", text: "" }); // Clear message on success
     } catch (err) {
       console.error("Failed to get calendar:", err);
@@ -58,6 +59,10 @@ const CalendarDetailPage = ({ token, calendarId }) => {
       });
     }
   }, [token, calendarId]); // Removed findCalendar from dependencies to prevent infinite loop
+
+  useEffect(() => {
+    console.log("claendar details is: ", calendarDetails);
+  }, [calendarDetails]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 font-sans">
@@ -85,7 +90,6 @@ const CalendarDetailPage = ({ token, calendarId }) => {
                 {calendarDetails.title}
               </h1>
               <div className="text-sm text-gray-600 space-y-1">
-                <p>Owner: {calendarDetails.owner?.name || "Unknown"}</p>
                 <p>
                   Last Updated:{" "}
                   {new Date(calendarDetails.updated_at).toLocaleString()}
