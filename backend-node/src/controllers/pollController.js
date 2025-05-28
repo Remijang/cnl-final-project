@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const { _getIdByName, _getGroupIdByName } = require("./userController");
 const votePoll = async (req, res) => {
   const { pollId } = req.params;
   const userId = req.user.id;
@@ -98,13 +99,15 @@ exports.createPoll = async (req, res) => {
 
 exports.inviteUserPoll = async (req, res) => {
   const { pollId } = req.params;
-  const { userId } = req.body;
+  const { name } = req.body;
   const ownerId = req.user.id;
 
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
+
+    const userId = await _getIdByName(name);
 
     const pollCheck = await client.query(
       "SELECT owner_id FROM polls WHERE id = $1",
@@ -145,13 +148,15 @@ exports.inviteUserPoll = async (req, res) => {
 
 exports.inviteGroupPoll = async (req, res) => {
   const { pollId } = req.params;
-  const { groupId } = req.body;
+  const { name } = req.body;
   const ownerId = req.user.id;
 
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
+
+    const groupId = await _getGroupIdByName(name);
 
     const pollCheck = await client.query(
       "SELECT owner_id FROM polls WHERE id = $1",

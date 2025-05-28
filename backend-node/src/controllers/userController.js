@@ -12,6 +12,18 @@ const _getIdByName = async (name) => {
   }
 };
 
+const _getGroupIdByName = async (name) => {
+  const result = await pool.query(`SELECT id FROM groups WHERE name = $1`, [
+    name,
+  ]);
+
+  if (result.rows.length === 1) {
+    return result.rows[0].id;
+  } else {
+    return null;
+  }
+};
+
 exports.getProfile = async (req, res) => {
   try {
     const userId = req.user.id; // User ID is now available in req.user from the middleware
@@ -79,3 +91,4 @@ exports.getUserIdByName = async (req, res) => {
 };
 
 exports._getIdByName = _getIdByName;
+exports._getGroupIdByName = _getGroupIdByName;

@@ -242,11 +242,11 @@ const PollsPage = ({ token }) => {
   };
 
   const handleInviteUserPoll = async (pollId, userId) => {
-    await inviteUserPoll(token, pollId, { userId });
+    await inviteUserPoll(token, pollId, { name: userId });
   };
 
   const handleInviteGroupPoll = async (pollId, groupId) => {
-    await inviteGroupPoll(token, pollId, { groupId });
+    await inviteGroupPoll(token, pollId, { name: groupId });
   };
 
   return (
