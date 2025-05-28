@@ -39,6 +39,7 @@ export async function apiFetch(
   }
 
   if (!response.ok) {
+    console.error(response);
     throw new Error(result.message || "API 錯誤");
   }
 

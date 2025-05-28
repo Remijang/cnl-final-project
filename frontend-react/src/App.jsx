@@ -16,6 +16,7 @@ import GroupsPage from "./pages/GroupsPage";
 import PollsPage from "./pages/PollsPage";
 import CalendarSearchPage from "./pages/CalendarSearchPage";
 import ProfilePage from "./components/ProfilePage";
+import ClaimPermissionPage from "./pages/ClaimPermissionPage";
 
 const CalendarDetailPageWrapper = () => {
   const { calendar_id } = useParams();
@@ -58,7 +59,10 @@ const App = () => {
         <Route path="/login" element={<LoginPage setToken={setToken} />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/oauth" element={<OAuthRedirect setToken={setToken} />} />
-
+        <Route
+          path="/claim/:calendarId/:mode/:key"
+          element={<ClaimPermissionPage />}
+        />
         <Route path="/groups" element={<GroupsPageWrapper />} />
         <Route path="/polls" element={<PollPageWrapper />} />
         <Route path="/profile" element={<ProfilePage />} />

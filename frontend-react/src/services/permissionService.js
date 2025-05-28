@@ -1,4 +1,4 @@
-// 📁 src/services/permissionService.js
+// src/services/permissionService.js
 import { apiFetch } from "./api";
 
 export const toggleVisibility = (token, calendar_id, on) =>

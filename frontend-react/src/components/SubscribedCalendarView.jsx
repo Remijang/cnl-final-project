@@ -5,8 +5,8 @@ import MergedCalendar from "./MergedCalendar"; // Using the actual MergedCalenda
 const SubscribedCalendarView = ({
   myCalendars = [], // Renamed from mycalendars for consistency and clarity
   subscribedCalendars = [],
+  setReload,
   token,
-  onUnsubscribeSuccess,
 }) => {
   const [message, setMessage] = useState({ type: "", text: "" }); // State for custom messages
 
@@ -18,15 +18,14 @@ const SubscribedCalendarView = ({
         type: "success",
         text: `Successfully unsubscribe calendar ${calendarTitle}.`,
       });
-      if (onUnsubscribeSuccess) {
-        onUnsubscribeSuccess(); // Trigger parent to re-fetch calendar list
-      }
     } catch (err) {
       console.error("Unsubscribe failed", err);
       setMessage({
         type: "error",
         text: `Unsubscribe failed: ${err.message || "Unknown error"}`,
       });
+    } finally {
+      setReload(true); // Trigger a reload of the calendar list
     }
   };
 
@@ -65,16 +64,17 @@ const SubscribedCalendarView = ({
         ) : (
           <div className="space-y-6">
             {subscribedCalendars.map((cal) => (
-              <div className="bg-white border-l-4 border-blue-500 p-5 rounded-md shadow hover:shadow-lg transition relative">
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-bold text-gray-800">
                   Title: {`${cal.title}`}
                 </h3>
 
+                {/* The Unsubscribe button - now direct action */}
                 <button
-                  onClick={() => handleUnsubscribe(cal.id, cal.title)}
+                  onClick={() => handleUnsubscribe(cal.id, cal.title)} // Direct call to handler
                   className="text-sm px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200 shadow-md"
                 >
-                  Unsubscribe
+                  Unsubscribe Calendar
                 </button>
               </div>
             ))}

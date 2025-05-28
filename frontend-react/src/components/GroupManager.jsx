@@ -288,7 +288,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
             <h3 className="text-xl font-bold mb-2">{group.owner_username}</h3>
             {group.members[group.members.length - 1].name && (
               <p className="text-lg font-bold mb-4">
-                Group Owner: {group.members[group.members.length - 1].name}
+                Group Owner: {group.members[0].name}
               </p>
             )}
 

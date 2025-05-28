@@ -10,6 +10,7 @@ const DashboardMain = () => {
   const [selectedCalendarId, setSelectedCalendarId] = useState(null);
   const [subscribedOnly, setSubscribedOnly] = useState([]);
   const [message, setMessage] = useState({ type: "", text: "" }); // State for custom messages
+  const [reload, setReload] = useState(false); // State to trigger reloads
 
   const navigate = useNavigate(); // Initialize useNavigate
 
@@ -52,11 +53,13 @@ const DashboardMain = () => {
 
     // Fetch all calendars for logged-in users
     loadCalendars();
-  }, [token, navigate, loadCalendars]); // Added loadCalendars to dependencies
+  }, [token]); // Added loadCalendars to dependencies
 
-  const handleUnsubscribeSuccess = useCallback(() => {
-    loadCalendars(); // Reload calendars when an unsubscribe happens in SubscribedCalendarView
-  }, [loadCalendars]);
+  useEffect(() => {
+    if (!reload) return;
+    loadCalendars(); // Reload calendars when reload state changes
+    setReload(false); // Reset reload state
+  }, [reload]); // This effect can be used to trigger re-renders if needed
 
   // If there's no token, return null to prevent rendering dashboard UI before redirect
   if (!token) {
@@ -94,7 +97,7 @@ const DashboardMain = () => {
             myCalendars={myCalendars}
             subscribedCalendars={subscribedOnly}
             token={token}
-            onUnsubscribeSuccess={handleUnsubscribeSuccess} // Pass the callback for successful unsubscribe
+            setReload={setReload} // Pass the callback for successful unsubscribe
           />
         </div>
       </div>
