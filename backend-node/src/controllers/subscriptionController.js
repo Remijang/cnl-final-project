@@ -29,6 +29,15 @@ exports.subscribeCalendar = async (req, res) => {
       return res.status(403).json({ error: "Permission denied" });
     }
 
+    const ownerId = await pool.query(
+      `SELECT owner_id FROM calendars WHERE id = $1`,
+      [calendarId]
+    );
+
+    if (ownerId.rows[0].ownerId === userId) {
+      return res.status(403).json({ error: "Permission denied" });
+    }
+
     const check_if_exist = await pool.query(
       "SELECT user_id, calendar_id, subscribed_at FROM calendar_subscriptions WHERE user_id = $1 AND calendar_id = $2",
       [userId, calendarId]
@@ -69,3 +78,4 @@ exports.unsubscribeCalendar = async (req, res) => {
 
 exports._unsubscribeCalendar = _unsubscribeCalendar;
 exports._unsubscribeAllExcept = _unsubscribeAllExcept;
+

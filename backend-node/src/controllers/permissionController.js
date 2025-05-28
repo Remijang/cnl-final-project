@@ -346,7 +346,15 @@ exports.claimReadPermission = async (req, res) => {
       [calendarId, userId]
     );
 
-    res.status(200).json(result.rows);
+    const title = await pool.query(
+      `SELECT title FROM calendars WHERE id = $1`,
+      [calendarId]
+    );
+
+    res.status(200).json({
+      title: title.rows[0].title,
+      other: result.rows,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -386,7 +394,15 @@ exports.claimWritePermission = async (req, res) => {
       [calendarId, userId]
     );
 
-    res.status(200).json(result.rows);
+    const title = await pool.query(
+      `SELECT title FROM calendars WHERE id = $1`,
+      [calendarId]
+    );
+
+    res.status(200).json({
+      title: title.rows[0].title,
+      other: result.rows,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -510,3 +526,4 @@ exports.permissionWrite = async (calendarId, userId) => {
   );
   return permissionCheck.rows[0].has_permission;
 };
+

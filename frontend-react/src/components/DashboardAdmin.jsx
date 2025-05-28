@@ -55,6 +55,15 @@ const DashboardAdmin = () => {
 
   const handleCreateCalendar = async ({ title, shared }) => {
     setMessage({ type: "", text: "" }); // Clear previous messages
+
+    if (!title || title.trim() === "") {
+      setMessage({
+        type: "error",
+        text: "Calendar name cannot be blank.",
+      });
+      return; // Stop the function if the title is blank
+    }
+
     try {
       const newCalendar = await createCalendar(token, { title });
       if (shared) {
@@ -124,3 +133,4 @@ const DashboardAdmin = () => {
 };
 
 export default DashboardAdmin;
+
