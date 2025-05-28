@@ -3,13 +3,14 @@ import { getCalendar, createCalendar } from "../services/calendarService";
 import AdminCalendarList from "./AdminCalendarList"; // Using actual CalendarList
 import CalendarEditor from "../components/CalendarEditor";
 import { toggleVisibility } from "../services/permissionService";
+
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const DashboardAdmin = () => {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [myCalendars, setMyCalendars] = useState([]);
-  const [selectedCalendarId, setSelectedCalendarId] = useState(null);
   const [message, setMessage] = useState({ type: "", text: "" }); // State for custom messages
+  const [reload, setReload] = useState(false); // State to trigger reloads
 
   const navigate = useNavigate(); // Initialize useNavigate
 
@@ -46,9 +47,11 @@ const DashboardAdmin = () => {
     loadCalendars();
   }, [token, navigate, loadCalendars]); // Added loadCalendars to dependencies
 
-  const handleSelectCalendar = (id) => {
-    setSelectedCalendarId(id);
-  };
+  useEffect(() => {
+    if (!reload) return;
+    loadCalendars(); // Reload calendars when reload state changes
+    setReload(false); // Reset reload state after loading
+  }, [reload]); // Reload calendars when reload state changes
 
   const handleCreateCalendar = async ({ title, shared }) => {
     setMessage({ type: "", text: "" }); // Clear previous messages
@@ -99,23 +102,21 @@ const DashboardAdmin = () => {
             {message.text}
           </div>
         )}
-
+        <h2 className="text-xl font-bold text-gray-800 mt-8 mb-4">
+          Add New Calendar
+        </h2>
         <CalendarEditor onSave={handleCreateCalendar} />
 
         {/* My Calendars List and Create New Calendar */}
         <div className="bg-gray-50 p-6 rounded-lg shadow-inner">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            My Calendars
+            Administrate My Calendars
           </h2>
           <AdminCalendarList // Using actual CalendarList
             calendars={myCalendars}
-            onSelect={handleSelectCalendar}
-            selectedCalendarId={selectedCalendarId}
             token={token}
+            setReload={setReload} // Pass setReload to trigger reloads
           />
-          <h2 className="text-xl font-bold text-gray-800 mt-8 mb-4">
-            Add New Calendar
-          </h2>
         </div>
       </div>
     </div>

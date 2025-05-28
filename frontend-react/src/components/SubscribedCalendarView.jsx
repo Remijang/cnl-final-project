@@ -65,13 +65,11 @@ const SubscribedCalendarView = ({
         ) : (
           <div className="space-y-6">
             {subscribedCalendars.map((cal) => (
-              <div
-                key={cal.id}
-                className="bg-white border-l-4 border-blue-500 p-5 rounded-md shadow hover:shadow-md transition"
-              >
+              <div className="bg-white border-l-4 border-blue-500 p-5 rounded-md shadow hover:shadow-lg transition relative">
                 <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  {cal.title}
+                  Title: {`${cal.title}`}
                 </h3>
+
                 <button
                   onClick={() => handleUnsubscribe(cal.id, cal.title)}
                   className="text-sm px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200 shadow-md"

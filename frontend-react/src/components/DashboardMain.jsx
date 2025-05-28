@@ -1,12 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { getCalendar } from "../services/calendarService";
-import CalendarList from "./AdminCalendarList"; // Using actual CalendarList
-import EventManager from "../components/EventManager"; // Using actual EventManager
-import LoginForm from "../components/LoginForm"; // LoginForm is still imported but will not be rendered directly if redirecting
-import CalendarEditor from "../components/CalendarEditor";
-import { toggleVisibility } from "../services/permissionService";
 import SubscribedCalendarView from "../components/SubscribedCalendarView";
-import MergedCalendar from "../components/MergedCalendar";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const DashboardMain = () => {
@@ -15,7 +9,6 @@ const DashboardMain = () => {
   const [subscribedCalendars, setSubscribedCalendars] = useState([]);
   const [selectedCalendarId, setSelectedCalendarId] = useState(null);
   const [subscribedOnly, setSubscribedOnly] = useState([]);
-  const [viewMode, setViewMode] = useState("subscribed"); // Changed default to "subscribed"
   const [message, setMessage] = useState({ type: "", text: "" }); // State for custom messages
 
   const navigate = useNavigate(); // Initialize useNavigate
@@ -60,10 +53,6 @@ const DashboardMain = () => {
     // Fetch all calendars for logged-in users
     loadCalendars();
   }, [token, navigate, loadCalendars]); // Added loadCalendars to dependencies
-
-  const handleSelectCalendar = (id) => {
-    setSelectedCalendarId(id);
-  };
 
   const handleUnsubscribeSuccess = useCallback(() => {
     loadCalendars(); // Reload calendars when an unsubscribe happens in SubscribedCalendarView

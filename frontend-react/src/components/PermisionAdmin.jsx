@@ -5,7 +5,9 @@ import {
   toggleVisibility,
 } from "../services/permissionService";
 
-const CalendarAdmin = ({ token, calendarId }) => {
+import { deleteCalendar } from "../services/calendarService";
+
+const CalendarAdmin = ({ token, calendar, setReload }) => {
   // State to manage the publicity status
   const [isPublic, setIsPublic] = useState(false);
   const [readLinkEnable, setReadLinkEnable] = useState(false);
@@ -15,10 +17,14 @@ const CalendarAdmin = ({ token, calendarId }) => {
 
   const [readKey, setReadKey] = useState("");
   const [writeKey, setWriteKey] = useState("");
+  const calendarId = calendar.id;
 
   const readLinkPrefix = `claim/${calendarId}/read/`;
   const writeLinkPrefix = `claim/${calendarId}/write/`;
   const urlPrefix = process.env.REACT_APP_CLAIM_URL || "";
+
+  const [removeConfirmWindow, setRemoveConfirmWindow] = useState(false);
+  const [removeCalendar, setRemoveCalendar] = useState(null);
 
   const fetchPermission = async () => {
     try {
@@ -45,15 +51,16 @@ const CalendarAdmin = ({ token, calendarId }) => {
       );
     }
   };
+
   useEffect(() => {
     fetchPermission();
   }, []);
 
   const handleTogglePublicity = async () => {
-    const toggleVisibility = !isPublic;
-    setIsPublic(toggleVisibility);
+    const togglePublicity = !isPublic;
+    setIsPublic(togglePublicity);
     try {
-      await toggleVisibility(token, calendarId, toggleVisibility);
+      await toggleVisibility(token, calendarId, togglePublicity);
     } catch (err) {
       console.log(
         `Failed to toggle visibility for calendar ${calendarId}:`,
@@ -120,6 +127,35 @@ const CalendarAdmin = ({ token, calendarId }) => {
     }
   };
 
+  const handleClickRemove = async (calendar) => {
+    console.log("handleClickRemove called with calendar:", calendar);
+    await setRemoveCalendar(calendar);
+    await setRemoveConfirmWindow(true);
+  };
+
+  const handleRemoveCalendar = async () => {
+    const calendarToRemove = removeCalendar;
+    await setRemoveCalendar(null); // Reset the calendar to be removed
+    try {
+      console.log("Removing calendar:", calendarToRemove);
+      await deleteCalendar(token, calendarToRemove.id);
+      await setReload(true); // Reload calendars after deletion
+    } catch (err) {
+      console.error("Failed to delete calendar:", err);
+      setMessage({
+        type: "error",
+        text: `Failed to delete calendar: ${err.message || "Unknown error"}`,
+      });
+      return;
+    } finally {
+      await setRemoveConfirmWindow(false); // Close the confirmation window
+    }
+  };
+
+  const handleCancelRemove = async () => {
+    await setRemoveCalendar(null); // Reset the calendar to be removed
+    await setRemoveConfirmWindow(false); // Close the confirmation window
+  };
   return (
     <div>
       {/* Toggle Publicity Button */}
@@ -140,7 +176,7 @@ const CalendarAdmin = ({ token, calendarId }) => {
         </button>
       </div>
 
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-6 animate-fade-in pb-4">
         {/* Read-only Link */}
         <div className="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-4">
           <label
@@ -224,7 +260,38 @@ const CalendarAdmin = ({ token, calendarId }) => {
           </div>
         </div>
       </div>
+      <div className="flex justify-end">
+        <button
+          onClick={() => handleClickRemove(calendar)}
+          className="px-6 py-2 rounded-full font-semibold text-white transition-all duration-300 ease-in-out bg-red-600 hover:bg-red-700"
+        >
+          Remove Calendar
+        </button>
+      </div>
 
+      {removeConfirmWindow && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              Delete Calendar
+            </h3>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelRemove}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRemoveCalendar}
+                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition duration-200"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Display copy message here, typically outside the conditional link section */}
       {copyMessage && (
         <div className="mt-4 text-center text-sm font-medium text-green-600 animate-fade-in">

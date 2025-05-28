@@ -6,7 +6,7 @@ const Header = () => {
   return (
     <div className="flex justify-center space-x-4 bg-blue-50 p-4 rounded-lg">
       {[
-        { to: "/calendar/", label: "Dashboard" },
+        { to: "/calendar/", label: "Calendar" },
         { to: "/calendar/admin", label: "Calendar Admin" },
         { to: "/calendar/edit", label: "Calendar Editor" },
         { to: "/calendar/list", label: "Calendar List" },

@@ -12,7 +12,6 @@ const CalendarEditor = ({ onSave, initialValue }) => {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Create or Edit Calendar</h2>
       <form
         onSubmit={handleSubmit}
         className="space-y-4 p-4 bg-white rounded-lg shadow-md"
