@@ -393,7 +393,7 @@ const PollManager = ({
                   <div className="flex items-center space-x-2 mt-2">
                     <input
                       type="text"
-                      placeholder="Enter user ID"
+                      placeholder="Enter user name"
                       value={inviteInputs[poll.id]?.user || ""}
                       onChange={(e) =>
                         setInviteInputs((prev) => ({
@@ -419,7 +419,7 @@ const PollManager = ({
                   <div className="flex items-center space-x-2 mt-2">
                     <input
                       type="text"
-                      placeholder="Enter group ID"
+                      placeholder="Enter group name"
                       value={inviteInputs[poll.id]?.group || ""}
                       onChange={(e) =>
                         setInviteInputs((prev) => ({
