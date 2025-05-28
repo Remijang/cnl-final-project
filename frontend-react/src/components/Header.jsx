@@ -51,7 +51,7 @@ const Header = ({ token, onLogout }) => {
           placeholder="Search User"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="px-3 py-1 border rounded-xl text-xl"
+          className="px-3 py-1 border-1.5 rounded-xl text-xl"
         />
         <button
           type="submit"
