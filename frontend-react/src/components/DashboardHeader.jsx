@@ -1,28 +1,24 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React from "react";
+import { Link } from "react-router-dom";
 import "../css/Header.css";
 
-const Header = ({ token, onLogout }) => {
-  const [searchInput, setSearchInput] = useState("");
-  const navigate = useNavigate();
-
+const Header = () => {
   return (
-    <div className="header">
-      <Link to="/calendar/" className="link-button">
-        Dashboard
-      </Link>
-
-      <Link to="/calendar/admin" className="link-button">
-        Calendar Admin
-      </Link>
-
-      <Link to="/calendar/edit" className="link-button">
-        Calendar Editor
-      </Link>
-
-      <Link to="/calendar/list" className="link-button">
-        Calendar Lists
-      </Link>
+    <div className="flex justify-center space-x-4 bg-orange-50 p-4 rounded-lg">
+      {[
+        { to: "/calendar/", label: "Dashboard" },
+        { to: "/calendar/admin", label: "Calendar Admin" },
+        { to: "/calendar/edit", label: "Calendar Editor" },
+        { to: "/calendar/list", label: "Calendar Lists" },
+      ].map(({ to, label }) => (
+        <Link
+          key={label}
+          to={to}
+          className="font-bold text-lg px-4 py-2 bg-white text-black rounded-full border-1.5 border-black shadow hover:bg-orange-300 transition"
+        >
+          {label}
+        </Link>
+      ))}
     </div>
   );
 };

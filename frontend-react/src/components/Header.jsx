@@ -15,51 +15,72 @@ const Header = ({ token, onLogout }) => {
   };
 
   return (
-    <div className="header">
-      <h2 style={{ display: "inline", marginRight: "1em" }}>🗓️ Calendar App</h2>
-      <Link to="/calendar/" className="link-button">
+    <div className="flex flex-wrap justify-center items-center space-x-6 py-4 bg-white">
+      <h2 className="text-4xl font-bold inline mr-4">🗓️ Calendar App</h2>
+      <Link
+        to="/calendar/"
+        className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+      >
         Dashboard
       </Link>
 
-      <Link to="/polls" className="link-button">
+      <Link
+        to="/polls"
+        className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+      >
         Polls
       </Link>
 
-      <Link to="/groups" className="link-button">
+      <Link
+        to="/groups"
+        className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+      >
         Groups
       </Link>
 
-      <Link to="/profile" className="link-button">
+      <Link
+        to="/profile"
+        className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+      >
         Profile
       </Link>
 
-      <form
-        onSubmit={handleSearch}
-        style={{ display: "inline", margin: "0em" }}
-      >
+      <form onSubmit={handleSearch} className="flex space-x-2">
         <input
           type="text"
           placeholder="Search User"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="search-input"
+          className="px-3 py-1 border rounded-lg text-lg"
         />
-        <button type="submit" className="search-button">
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+        >
           Search
         </button>
       </form>
 
       {token ? (
-        <button onClick={onLogout} className="link-button">
+        <button
+          onClick={onLogout}
+          className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+        >
           Logout
         </button>
       ) : (
         <>
-          <Link to="/login" className="link-button">
+          <Link
+            to="/login"
+            className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+          >
             Login
           </Link>
 
-          <Link to="/register" className="link-button">
+          <Link
+            to="/register"
+            className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+          >
             Register
           </Link>
         </>
