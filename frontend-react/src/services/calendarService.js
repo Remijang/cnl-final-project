@@ -1,10 +1,8 @@
 import { apiFetch } from "./api";
 
 //Calander API
-export const getUserCalendar = (token) =>
-  apiFetch("/calendars/owned", "GET", token);
-export const getAggregatedCalendar = (token) =>
-  apiFetch("/calendars/aggregated", "GET", token);
+export const getCalendar = (token, mode) =>
+  apiFetch(`/calendars/${mode}`, "GET", token); // mode can be owned, write, read, and subscribed
 export const createCalendar = (token, data) =>
   apiFetch("/calendars", "POST", token, data);
 export const updateCalendar = (token, id, data) =>

@@ -1,26 +1,14 @@
 import React, { useEffect, useState, useCallback } from "react";
-import {
-  getUserCalendar,
-  getSubscribedCalendars,
-  createCalendar,
-} from "../services/calendarService";
-import CalendarList from "../components/CalendarList"; // Using actual CalendarList
-import EventManager from "../components/EventManager"; // Using actual EventManager
-import LoginForm from "../components/LoginForm"; // LoginForm is still imported but will not be rendered directly if redirecting
-import CalendarEditor from "../components/CalendarEditor";
-import { toggleVisibility } from "../services/permissionService";
-import SubscribedCalendarView from "../components/SubscribedCalendarView";
-import MergedCalendar from "../components/MergedCalendar";
+import { getCalendar } from "../services/calendarService";
+import CalendarList from "./CalendarList"; // Using actual CalendarList
+import EventManager from "./EventManager"; // Using actual EventManager
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const DashboardEditor = () => {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
-  const [myCalendars, setMyCalendars] = useState([]);
-  const [subscribedCalendars, setSubscribedCalendars] = useState([]);
+  const [editCalendars, setEditCalendars] = useState([]);
   const [selectedCalendarId, setSelectedCalendarId] = useState(null);
-  const [subscribedOnly, setSubscribedOnly] = useState([]);
   const [message, setMessage] = useState({ type: "", text: "" }); // State for custom messages
-
   const navigate = useNavigate(); // Initialize useNavigate
 
   const loadCalendars = useCallback(async () => {
@@ -34,16 +22,8 @@ const DashboardEditor = () => {
       return;
     }
     try {
-      const [myCals, subCals] = await Promise.all([
-        getUserCalendar(token),
-        getSubscribedCalendars(token),
-      ]);
-      setMyCalendars(myCals);
-      setSubscribedCalendars(subCals);
-      const subOnly = subCals.filter(
-        (sub) => !myCals.some((mine) => Number(mine.id) === Number(sub.id))
-      );
-      setSubscribedOnly(subOnly);
+      const editCals = await getCalendar(token, "write");
+      setEditCalendars(editCals);
     } catch (err) {
       console.error("Failed to load calendars:", err);
       setMessage({
@@ -68,31 +48,6 @@ const DashboardEditor = () => {
     setSelectedCalendarId(id);
   };
 
-  const handleCreateCalendar = async ({ title, shared }) => {
-    setMessage({ type: "", text: "" }); // Clear previous messages
-    try {
-      const newCalendar = await createCalendar(token, { title });
-      if (shared) {
-        await toggleVisibility(token, newCalendar.id, true);
-      }
-      setMessage({
-        type: "success",
-        text: `Calendar "${title}" created successfully!`,
-      });
-      await loadCalendars(); // Reload all calendars to show the new one
-    } catch (err) {
-      console.error("Failed to create calendar:", err);
-      setMessage({
-        type: "error",
-        text: `Failed to create calendar: ${err.message || "Unknown error"}`,
-      });
-    }
-  };
-
-  const handleUnsubscribeSuccess = useCallback(() => {
-    loadCalendars(); // Reload calendars when an unsubscribe happens in SubscribedCalendarView
-  }, [loadCalendars]);
-
   // If there's no token, return null to prevent rendering dashboard UI before redirect
   if (!token) {
     return null; // Or a small loading spinner if desired
@@ -100,12 +55,12 @@ const DashboardEditor = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8 font-sans">
-      <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-10">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-10">
         {/* Header Section: Title and View Mode Selector */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
-          <h1 className="text-4xl font-extrabold text-gray-800 tracking-tight text-center sm:text-left mb-4 sm:mb-0">
-            Calendar Dashboard
-          </h1>
+          <h2 className="text-4xl font-extrabold text-gray-800 tracking-tight text-center sm:text-left mb-4 sm:mb-0">
+            Calendar Editor
+          </h2>
         </div>
 
         {/* Message Box */}
@@ -122,22 +77,16 @@ const DashboardEditor = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-8">
           {/* My Calendars List and Create New Calendar */}
           <div className="bg-gray-50 p-6 rounded-lg shadow-inner">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              My Calendars
-            </h2>
             <CalendarList // Using actual CalendarList
-              calendars={myCalendars}
+              calendars={editCalendars}
               onSelect={handleSelectCalendar}
               selectedCalendarId={selectedCalendarId}
               token={token}
+              mode="edit" // Pass mode prop to indicate edit mode
             />
-            <h2 className="text-xl font-bold text-gray-800 mt-8 mb-4">
-              Add New Calendar
-            </h2>
-            <CalendarEditor onSave={handleCreateCalendar} />
           </div>
 
           {/* Selected Calendar Event Manager */}
@@ -147,7 +96,7 @@ const DashboardEditor = () => {
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">
                   Calendar{" "}
                   <span className="text-blue-600">
-                    {myCalendars.find((cal) => cal.id === selectedCalendarId)
+                    {editCalendars.find((cal) => cal.id === selectedCalendarId)
                       ?.title || `(ID: ${selectedCalendarId})`}
                   </span>
                 </h2>

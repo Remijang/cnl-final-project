@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
 import EventManager from "../components/EventManager";
 import { useParams } from "react-router-dom";
-import {
-  getUserCalendar,
-  getSubscribedCalendars,
-} from "../services/calendarService";
+import { getCalendar } from "../services/calendarService";
 
 const CalendarDetailPage = () => {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
@@ -19,8 +16,8 @@ const CalendarDetailPage = () => {
     setMessage({ type: "info", text: "Loading calendar information..." }); // Set loading message
     try {
       const [ownedCals, subCals] = await Promise.all([
-        getUserCalendar(token),
-        getSubscribedCalendars(token),
+        getCalendar(token, "owned"),
+        getCalendar(token, "subscribed"),
       ]);
 
       const allCals = [...ownedCals, ...subCals];

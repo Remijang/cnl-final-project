@@ -84,16 +84,6 @@ exports.getSubscribedCalendar = async (req, res) => {
   try {
     const result = await pool.query(
       `
-    SELECT * FROM calendars WHERE owner_id = $1
-      
-    UNION
-      
-    SELECT c.*
-    FROM calendars c
-    WHERE c.owner_id = $1
-       
-    UNION
-
     SELECT c.*
     FROM calendars c
     JOIN calendar_subscriptions cs ON c.id = cs.calendar_id
@@ -108,27 +98,46 @@ exports.getSubscribedCalendar = async (req, res) => {
   }
 };
 
-exports.getAggregatedCalendar = async (req, res) => {
+exports.getReadCalendar = async (req, res) => {
   const userId = req.user.id;
   try {
     const result = await pool.query(
       `
-    SELECT * FROM calendars WHERE owner_id = $1
+      SELECT * FROM calendars WHERE owner_id = $1
 
-    UNION
+      UNION
 
-    SELECT *
-    FROM calendars 
-    WHERE visibility = TRUE
+      SELECT c.*
+      FROM calendars c
+      JOIN calendar_shared_users csu ON c.id = csu.calendar_id
+      WHERE csu.user_id = $1 AND csu.permission = 'read'
+      ORDER BY created_at DESC;
+    `,
+      [userId]
+    );
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Failed to fetch calendars.", details: err.message });
+  }
+};
 
-    UNION
-    
-    SELECT c.*
-    FROM calendars c
-    JOIN calendar_shared_users csu ON c.id = csu.calendar_id
-    WHERE csu.user_id = $1 AND csu.permission = 'read'
-    ORDER BY created_at DESC;
-  `,
+exports.getWriteCalendar = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const result = await pool.query(
+      `
+      SELECT * FROM calendars WHERE owner_id = $1
+
+      UNION
+
+      SELECT c.*
+      FROM calendars c
+      JOIN calendar_shared_users csu ON c.id = csu.calendar_id
+      WHERE csu.user_id = $1 AND csu.permission = 'write'
+      ORDER BY created_at DESC;
+    `,
       [userId]
     );
     res.status(200).json(result.rows);

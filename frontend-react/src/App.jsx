@@ -50,14 +50,15 @@ const App = () => {
     <Router>
       <Header token={token} onLogout={handleLogout} />
       <Routes>
+        <Route
+          path="/calendar/view/:calendar_id"
+          element={<CalendarDetailPageWrapper />}
+        />
         <Route path="/calendar/*" element={<DashboardPage />} />
         <Route path="/login" element={<LoginPage setToken={setToken} />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/oauth" element={<OAuthRedirect setToken={setToken} />} />
-        {/* <Route
-          path="/calendar/:calendar_id"
-          element={<CalendarDetailPageWrapper />}
-        /> */}
+
         <Route path="/groups" element={<GroupsPageWrapper />} />
         <Route path="/polls" element={<PollPageWrapper />} />
         <Route path="/profile" element={<ProfilePage />} />

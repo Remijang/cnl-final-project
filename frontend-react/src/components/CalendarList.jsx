@@ -1,7 +1,16 @@
 import React from "react";
-import CalendarAdmin from "./PermisionAdmin";
 
-function CalendarList({ calendars, onSelect, selectedCalendarId, token }) {
+const handleCheckCalendar = async (calendarId, navigate) => {
+  navigate(`/calendar/view/${calendarId}`);
+};
+
+function CalendarList({
+  calendars,
+  onSelect,
+  selectedCalendarId,
+  navigate,
+  mode,
+}) {
   // Added selectedCalendarId prop
   return (
     <div className="space-y-2">
@@ -19,7 +28,14 @@ function CalendarList({ calendars, onSelect, selectedCalendarId, token }) {
             }`}
           >
             <h4 className="font-semibold text-gray-800">{cal.title}</h4>
-            <CalendarAdmin token={token} calendarId={cal.id}></CalendarAdmin>
+            {mode === "view" && (
+              <button
+                onClick={() => handleCheckCalendar(cal.id, navigate)}
+                className="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600 transition duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ml-2"
+              >
+                View Calendar
+              </button>
+            )}
           </div>
         ))
       )}

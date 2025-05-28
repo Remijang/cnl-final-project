@@ -4,7 +4,7 @@ import {
   deleteEvent,
   getEventsByCalendar,
 } from "../services/eventService";
-import { getUserCalendar } from "../services/calendarService";
+import { getCalendar } from "../services/calendarService";
 // MergedCalendar is removed from here to avoid duplicated content.
 // import MergedCalendar from "./MergedCalendar";
 
@@ -54,7 +54,7 @@ const EventManager = ({ token, calendar_id }) => {
     // and not for managing multiple calendars or their details.
     // Keeping it for now as per original code structure.
     try {
-      const data = await getUserCalendar(token);
+      const data = await getUserCalendar(token, "owned");
       setCalendars(data);
     } catch (err) {
       console.error("Failed to load calendars", err);

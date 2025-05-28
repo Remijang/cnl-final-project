@@ -121,11 +121,7 @@ const CalendarAdmin = ({ token, calendarId }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md mb-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        Calendar Settings
-      </h2>
-
+    <div>
       {/* Toggle Publicity Button */}
       <div className="flex items-center justify-between mb-6 border-b border-gray-200 pb-4">
         <span className="text-lg font-medium text-gray-700">
@@ -145,11 +141,6 @@ const CalendarAdmin = ({ token, calendarId }) => {
       </div>
 
       <div className="space-y-6 animate-fade-in">
-        {/* Descriptive text for links - now appears only once */}
-        <p className="text-gray-600 text-sm">
-          公開日曆連結允許他人查看您的日曆。寫入連結可讓他們新增或修改事件。
-        </p>
-
         {/* Read-only Link */}
         <div className="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-4">
           <label

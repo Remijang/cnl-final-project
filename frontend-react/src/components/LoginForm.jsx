@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { login } from "../services/authService";
-import { Link, useNavigate } from "react-router-dom"; // 加這行
+import { Link, useNavigate } from "react-router-dom";
 
 const LoginForm = ({ setToken }) => {
   const [email, setEmail] = useState("");
@@ -17,7 +17,7 @@ const LoginForm = ({ setToken }) => {
       localStorage.setItem("token", token);
       setToken(token);
       setMessage({ type: "success", text: "Login successfully！" });
-      setTimeout(() => navigate("/"), 1500);
+      setTimeout(() => navigate("/calendar/"), 500);
     } catch (err) {
       console.error("Login failed", err);
       setMessage({ type: "error", text: "Login failed：" + err.message });
