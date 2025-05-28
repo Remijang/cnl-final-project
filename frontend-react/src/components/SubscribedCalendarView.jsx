@@ -64,24 +64,21 @@ const SubscribedCalendarView = ({
         </h2>
         {subscribedCalendars.length === 0 ? (
           <p className="text-gray-600 text-center">
-            You haven't subscribed to any calendars yet.
+            You haven't subscribed to any calendar yet.
           </p>
         ) : (
           <div className="space-y-6">
             {subscribedCalendars.map((cal) => (
               <div
                 key={cal.id}
-                className="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200"
+                className="bg-white border-l-4 border-blue-500 p-5 rounded-md shadow hover:shadow-md transition"
               >
                 <h3 className="text-xl font-bold text-gray-800 mb-2">
                   {cal.title}
                 </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Calendar ID: {cal.id}
-                </p>
                 <button
                   onClick={() => handleUnsubscribe(cal.id, cal.title)}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200 shadow-md"
+                  className="text-sm px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-200 shadow-md"
                 >
                   Unsubscribe
                 </button>

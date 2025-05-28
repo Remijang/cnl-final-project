@@ -276,17 +276,18 @@ const GroupManager = ({ token, onCheckAvailability }) => {
         </p>
       )}
 
-      <div className="">
+      <div className="space-y-4">
         {groups.map((group) => (
           <div
             key={group.id}
-            className="bg-white rounded-lg shadow-md border border-gray-200 p-6 flex flex-col"
+            className="bg-white rounded-lg shadow-md border-2 border-black p-6 flex flex-col"
           >
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
-              {group.owner_username}
-            </h3>
+            <h2 className="text-2xl font-bold text-indigo-700 mb-3">
+              Group: {group.name}
+            </h2>
+            <h3 className="text-xl font-bold mb-2">{group.owner_username}</h3>
             {group.members[group.members.length - 1].name && (
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-lg font-bold mb-4">
                 Group Owner: {group.members[group.members.length - 1].name}
               </p>
             )}
@@ -407,11 +408,11 @@ const GroupManager = ({ token, onCheckAvailability }) => {
               Add Member to Group
             </h3>
             <p className="text-gray-600 mb-4">
-              Please enter the User ID of the member to add:
+              Please enter the username of the member:
             </p>
             <input
               type="text"
-              placeholder="User ID"
+              placeholder="Username"
               value={userIdToAdd}
               onChange={(e) => setUserIdToAdd(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
@@ -419,7 +420,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={handleAddUserCancel}
-                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-200"
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-gray-400 transition duration-200"
               >
                 Cancel
               </button>
@@ -439,7 +440,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
-              Confirm Remove Member
+              Confirm Removal of Member
             </h3>
             <p className="text-gray-600 mb-4">
               Are you sure you want to remove member "
@@ -468,7 +469,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">
-              Confirm Remove Group
+              Confirm Removal of Group
             </h3>
             <p className="text-gray-600 mb-4">
               Are you sure you want to remove group "{groupToRemove.groupName}"?
