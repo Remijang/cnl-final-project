@@ -16,12 +16,8 @@ const CalendarDetailPage = ({ token, calendarId }) => {
   const findCalendar = async () => {
     setMessage({ type: "info", text: "Loading calendar information..." }); // Set loading message
     try {
-      const [ownedCals, subCals] = await Promise.all([
-        getCalendar(token, "owned"),
-        getCalendar(token, "subscribed"),
-      ]);
+      const allCals = await getCalendar(token, "read");
 
-      const allCals = [...ownedCals, ...subCals];
       const targetCal = allCals.find((cal) => cal.id.toString() === calendarId);
 
       if (!targetCal) {
