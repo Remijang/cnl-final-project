@@ -55,12 +55,12 @@ const CalendarSearchPage = ({ token }) => {
       if (data.length === 0) {
         setMessage({
           type: "info",
-          text: "User not found, or user has no public calendars.",
+          text: "User not found, or user doesn't have any public calendar.",
         });
       }
     } catch (err) {
       console.error("Query failed", err);
-      setError("User not found, or user has no public calendars");
+      setError("User not found, or user doesn't have any public calendar");
       setMessage({
         type: "error",
         text: `Query failed: ${

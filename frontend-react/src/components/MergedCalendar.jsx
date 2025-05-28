@@ -131,7 +131,7 @@ const MergedCalendar = ({
 
       {selectedEvents.length === 0 ? (
         <p className="text-center text-gray-600">
-          There are no events on this date.
+          There is no event on this date.
         </p>
       ) : (
         <div className="overflow-x-auto">

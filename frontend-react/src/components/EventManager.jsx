@@ -37,7 +37,7 @@ const EventManager = ({ token, calendar_id }) => {
       if (data.length === 0) {
         setMessage({
           type: "info",
-          text: "This calendar currently has no events.",
+          text: "This calendar currently has no event.",
         });
       }
     } catch (err) {
@@ -171,7 +171,7 @@ const EventManager = ({ token, calendar_id }) => {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter event title"
+              placeholder="Enter title of the event"
               className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
             />
           </div>
@@ -221,9 +221,7 @@ const EventManager = ({ token, calendar_id }) => {
       <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
         <h3 className="text-xl font-bold text-gray-800 mb-4">Event List</h3>
         {events.length === 0 && message.type !== "error" ? (
-          <p className="text-gray-600">
-            This calendar currently has no events.
-          </p>
+          <p className="text-gray-600">This calendar currently has no event.</p>
         ) : (
           <ul className="space-y-3">
             {events.map((event) => (

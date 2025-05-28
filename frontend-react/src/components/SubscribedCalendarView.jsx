@@ -16,7 +16,7 @@ const SubscribedCalendarView = ({
       await unsubscribeCalendar(token, calendarId);
       setMessage({
         type: "success",
-        text: `Successfully unsubscribed from ${calendarTitle}.`,
+        text: `Successfully unsubscribe calendar ${calendarTitle}.`,
       });
       if (onUnsubscribeSuccess) {
         onUnsubscribeSuccess(); // Trigger parent to re-fetch calendar list
@@ -47,10 +47,6 @@ const SubscribedCalendarView = ({
           </div>
         )}
 
-        {/* Display the Merged Calendar */}
-        <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-          All Your Events
-        </h2>
         {/* Pass both myCalendars and subscribedCalendars to MergedCalendar */}
         <MergedCalendar
           token={token}

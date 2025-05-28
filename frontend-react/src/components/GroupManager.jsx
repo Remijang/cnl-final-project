@@ -272,7 +272,7 @@ const GroupManager = ({ token, onCheckAvailability }) => {
 
       {!isLoading && !error && groups.length === 0 && (
         <p className="text-gray-600 text-center">
-          You haven't joined any groups yet, or there are no groups to display.
+          You haven't joined any group yet, or there is no group to display.
         </p>
       )}
 
