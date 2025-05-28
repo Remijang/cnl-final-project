@@ -464,8 +464,8 @@ const PollManager = ({
                             className="form-checkbox h-4 w-4 text-blue-600 rounded focus:ring-blue-500 mr-2"
                           />
                           <span>
-                            {new Date(tr.start_time).toLocaleString()} -{" "}
-                            {new Date(tr.end_time).toLocaleString()}
+                            {new Date(tr.start_time).toLocaleString("en-US")} -{" "}
+                            {new Date(tr.end_time).toLocaleString("en-US")}
                             <strong className="ml-2 text-blue-700">
                               {" "}
                               ({tr.available_count || 0} votes)
@@ -493,8 +493,8 @@ const PollManager = ({
                         <option value="">-- Confirm Time --</option>
                         {pollDetails[poll.id].map((tr) => (
                           <option key={tr.id} value={tr.id}>
-                            {new Date(tr.start_time).toLocaleString()} -{" "}
-                            {new Date(tr.end_time).toLocaleString()}
+                            {new Date(tr.start_time).toLocaleString("en-US")} -{" "}
+                            {new Date(tr.end_time).toLocaleString("en-US")}
                           </option>
                         ))}
                       </select>
@@ -567,13 +567,13 @@ const PollManager = ({
                   pollDetails[confirmTimeRangeData.pollId]?.find(
                     (tr) => tr.id === confirmTimeRangeData.timeRangeId
                   )?.start_time
-                ).toLocaleString()}{" "}
+                ).toLocaleString("en-US")}{" "}
                 -
                 {new Date(
                   pollDetails[confirmTimeRangeData.pollId]?.find(
                     (tr) => tr.id === confirmTimeRangeData.timeRangeId
                   )?.end_time
-                ).toLocaleString()}
+                ).toLocaleString("en-US")}
               </span>
             </p>
             <div className="flex justify-end space-x-3">

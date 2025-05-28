@@ -61,12 +61,6 @@ const CalendarSearchPage = ({ token }) => {
     } catch (err) {
       console.error("Query failed", err);
       setError("User not found, or user doesn't have any public calendar");
-      setMessage({
-        type: "error",
-        text: `Query failed: ${
-          err.message || "Unknown error"
-        }. User not found, or user has no public calendars.`,
-      });
       // If fetching fails due to authentication, redirect
       if (err.response?.status === 401) {
         // Common status for unauthorized

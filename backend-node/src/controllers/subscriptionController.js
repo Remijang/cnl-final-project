@@ -34,7 +34,7 @@ exports.subscribeCalendar = async (req, res) => {
       [calendarId]
     );
 
-    if (ownerId.rows[0].ownerId === userId) {
+    if (ownerId.rows[0].owner_id === userId) {
       return res.status(403).json({ error: "Permission denied" });
     }
 
@@ -78,4 +78,3 @@ exports.unsubscribeCalendar = async (req, res) => {
 
 exports._unsubscribeCalendar = _unsubscribeCalendar;
 exports._unsubscribeAllExcept = _unsubscribeAllExcept;
-
