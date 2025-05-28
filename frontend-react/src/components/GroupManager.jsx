@@ -280,9 +280,9 @@ const GroupManager = ({ token, onCheckAvailability }) => {
         {groups.map((group) => (
           <div
             key={group.id}
-            className="bg-white rounded-lg shadow-md border-2 border-black p-6 flex flex-col"
+            className="bg-white rounded-lg shadow-md border-2 border-gray-300 p-6 flex flex-col"
           >
-            <h2 className="text-2xl font-bold text-indigo-700 mb-3">
+            <h2 className="text-2xl font-bold text-blue-800 mb-3">
               Group: {group.name}
             </h2>
             <h3 className="text-xl font-bold mb-2">{group.owner_username}</h3>

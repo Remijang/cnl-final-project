@@ -120,7 +120,7 @@ const DashboardPage = () => {
               className="block w-full sm:w-auto px-3 py-2 bg-indigo-50 border border-indigo-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"
             >
               <option value="subscribed">Subscribed Calendars</option>
-              <option value="merged">Aggregated Calendar</option>
+              <option value="merged">Aggregated Calendars</option>
               <option value="mine">My Calendars</option>
             </select>
           </div>
@@ -197,7 +197,7 @@ const DashboardPage = () => {
         ) : (
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Aggregated Calendar
+              Aggregated Calendars
             </h2>
             <MergedCalendar
               token={token}
