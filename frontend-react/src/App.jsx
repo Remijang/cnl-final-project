@@ -21,7 +21,7 @@ const CalendarDetailPageWrapper = () => {
   const { calendar_id } = useParams();
   const token = localStorage.getItem("token");
 
-  return <CalendarDetailPage calendar_id={calendar_id} token={token} />;
+  return <CalendarDetailPage calendarId={calendar_id} token={token} />;
 };
 
 const GroupsPageWrapper = () => {

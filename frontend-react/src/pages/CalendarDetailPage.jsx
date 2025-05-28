@@ -3,9 +3,9 @@ import EventManager from "../components/EventManager";
 import { useParams } from "react-router-dom";
 import { getCalendar } from "../services/calendarService";
 
-const CalendarDetailPage = () => {
-  const [token, setToken] = useState(localStorage.getItem("token") || "");
-  const { calendarId } = useParams();
+const CalendarDetailPage = ({ token, calendarId }) => {
+  //const [token, setToken] = useState(localStorage.getItem("token") || "");
+  //const { calendarId } = useParams();
   const [calendarDetails, setCalendarDetails] = useState(null);
   const [message, setMessage] = useState({
     type: "info",
@@ -51,10 +51,22 @@ const CalendarDetailPage = () => {
     if (token && calendarId) {
       findCalendar();
     } else {
-      setMessage({
-        type: "error",
-        text: "Authentication token or calendar ID is missing. Please log in first.",
-      });
+      if (!token && !calendarId) {
+        setMessage({
+          type: "error",
+          text: "1Authentication token or calendar ID is missing. Please log in first.",
+        });
+      } else if (!token) {
+        setMessage({
+          type: "error",
+          text: "2Authentication token or calendar ID is missing. Please log in first.",
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: "3Authentication token or calendar ID is missing. Please log in first.",
+        });
+      }
     }
   }, [token, calendarId]); // Removed findCalendar from dependencies to prevent infinite loop
 
