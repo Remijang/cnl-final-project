@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import EventManager from "../components/EventManager";
+import MergedCalendar from "../components/MergedCalendar";
 import { useParams } from "react-router-dom";
 import { getCalendar } from "../services/calendarService";
 
@@ -51,22 +52,10 @@ const CalendarDetailPage = ({ token, calendarId }) => {
     if (token && calendarId) {
       findCalendar();
     } else {
-      if (!token && !calendarId) {
-        setMessage({
-          type: "error",
-          text: "1Authentication token or calendar ID is missing. Please log in first.",
-        });
-      } else if (!token) {
-        setMessage({
-          type: "error",
-          text: "2Authentication token or calendar ID is missing. Please log in first.",
-        });
-      } else {
-        setMessage({
-          type: "error",
-          text: "3Authentication token or calendar ID is missing. Please log in first.",
-        });
-      }
+      setMessage({
+        type: "error",
+        text: "Authentication token or calendar ID is missing. Please log in first.",
+      });
     }
   }, [token, calendarId]); // Removed findCalendar from dependencies to prevent infinite loop
 
@@ -103,11 +92,10 @@ const CalendarDetailPage = ({ token, calendarId }) => {
                 </p>
               </div>
             </header>
-
-            <EventManager
+            <MergedCalendar
               token={token}
-              calendar_id={calendarId}
-              className="mt-8" // Use Tailwind class for margin
+              myCalendars={[calendarDetails]}
+              subscribedCalendars={[]}
             />
           </>
         ) : (
