@@ -19,28 +19,28 @@ const Header = ({ token, onLogout }) => {
       <h2 className="text-4xl font-bold inline mr-4">🗓️ Calendar App</h2>
       <Link
         to="/calendar/"
-        className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+        className="px-4 py-2 rounded-xl text-xl bg-black text-white font-bold hover:bg-blue-600"
       >
         Dashboard
       </Link>
 
       <Link
         to="/polls"
-        className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+        className="px-4 py-2 rounded-xl text-xl bg-black text-white font-bold hover:bg-purple-600"
       >
         Polls
       </Link>
 
       <Link
         to="/groups"
-        className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+        className="px-4 py-2 rounded-xl text-xl bg-black text-white font-bold hover:bg-purple-600"
       >
         Groups
       </Link>
 
       <Link
         to="/profile"
-        className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+        className="px-4 py-2 rounded-xl text-xl bg-black text-white font-bold hover:bg-green-600"
       >
         Profile
       </Link>
@@ -51,11 +51,11 @@ const Header = ({ token, onLogout }) => {
           placeholder="Search User"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="px-3 py-1 border rounded-lg text-lg"
+          className="px-3 py-1 border rounded-xl text-xl"
         />
         <button
           type="submit"
-          className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+          className="px-4 py-2 rounded-xl text-xl bg-black text-white font-bold hover:bg-green-600"
         >
           Search
         </button>
@@ -64,7 +64,7 @@ const Header = ({ token, onLogout }) => {
       {token ? (
         <button
           onClick={onLogout}
-          className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+          className="px-4 py-2 rounded-xl text-xl bg-black text-white font-bold hover:bg-red-600"
         >
           Logout
         </button>
@@ -72,14 +72,14 @@ const Header = ({ token, onLogout }) => {
         <>
           <Link
             to="/login"
-            className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+            className="px-4 py-2 rounded-xl text-xl bg-black text-white font-bold hover:bg-red-600"
           >
             Login
           </Link>
 
           <Link
             to="/register"
-            className="px-4 py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600"
+            className="px-4 py-2 rounded-xl text-xl bg-blue-500 text-white font-bold hover:bg-red-600"
           >
             Register
           </Link>
