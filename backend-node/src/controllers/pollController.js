@@ -201,11 +201,24 @@ exports.inviteGroupPoll = async (req, res) => {
   }
 };
 
-exports.listPoll = async (_, res) => {
+exports.listPoll = async (req, res) => {
+  const userId = req.user.id;
   try {
     // Should list polls that already confirmed?
     const result = await pool.query(
-      "SELECT * FROM polls WHERE is_cancelled = FALSE AND is_confirmed = FALSE ORDER BY created_at DESC"
+      `SELECT DISTINCT polls.*
+      FROM polls
+      LEFT JOIN poll_invited_users ON polls.id = poll_invited_users.poll_id
+      WHERE
+        polls.is_cancelled = FALSE
+        AND polls.is_confirmed = FALSE
+        AND (
+          polls.owner_id = $1
+          OR poll_invited_users.user_id = $1
+        )
+      ORDER BY polls.created_at DESC;
+      `,
+      [userId]
     );
     res.status(200).json(result.rows);
   } catch (err) {
